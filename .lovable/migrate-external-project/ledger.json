@@ -1,0 +1,18 @@
+{
+  "source": "code-archive (v0 / Next.js shell serving public/index.html)",
+  "capabilities": [
+    { "capability": "code", "source": "Next.js 16 shell redirecting to a single-file vanilla JS app (public/index.html)", "outcome": "rebuild as TanStack Start React routes (/ auth, /dashboard)", "status": "in_progress", "next_action": "rebuild UI and behavior" },
+    { "capability": "schema", "source": "browser localStorage keys nr_shops_v1, nr_shop_data_v1_<id> (shops, customers, smsLog, stock, crowd, cycle)", "outcome": "migrate to Lovable Cloud tables shops, customers, sms_logs", "status": "in_progress", "next_action": "create migration with RLS" },
+    { "capability": "records", "source": "localStorage in each shopkeeper's browser on the old site; no export in archive", "outcome": "migrate", "status": "pending", "next_action": "request per-browser export after preview or user skip" },
+    { "capability": "auth identities", "source": "local username/shop ID + SHA-256 salted password in localStorage; no emails", "outcome": "migrate to Lovable auth (email + password, login by email, username or shop ID)", "status": "in_progress", "next_action": "implement; existing shopkeepers re-register since no email or export exists" },
+    { "capability": "authorization", "source": "each shop sees only its own data (client-side)", "outcome": "RLS: shop owner only", "status": "in_progress", "next_action": "policies + verify cross-user isolation" },
+    { "capability": "uploaded file bytes", "source": "none", "outcome": "not applicable", "status": "verified", "next_action": "none" },
+    { "capability": "external providers: SMS", "source": "simulated in-browser dispatch (no real SMS provider)", "outcome": "preserve simulated dispatch with logged history", "status": "in_progress", "next_action": "rebuild; real SMS provider is a future feature" },
+    { "capability": "external providers: analytics", "source": "@vercel/analytics (Vercel platform runtime)", "outcome": "replaced by Lovable built-in project analytics", "status": "accepted", "next_action": "none" },
+    { "capability": "public endpoints / callbacks / webhooks / schedules", "source": "none detected", "outcome": "not applicable", "status": "verified", "next_action": "none" },
+    { "capability": "secrets", "source": "none (NODE_ENV only)", "outcome": "not applicable", "status": "verified", "next_action": "none" },
+    { "capability": "assets", "source": "public/icon.svg, apple-icon.png, icon-light/dark-32x32.png", "outcome": "copy favicons", "status": "in_progress", "next_action": "copy into public/" },
+    { "capability": "cutover", "source": "old v0/Vercel deployment", "outcome": "publish on Lovable, point users to new URL", "status": "pending", "next_action": "user publishes" },
+    { "capability": "verification", "source": "-", "outcome": "build, auth, CRUD, isolation", "status": "pending", "next_action": "run checks" }
+  ]
+}
