@@ -296,7 +296,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
         <CounterGrid counts={counts} />
 
-        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 lg:items-start">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:items-start lg:grid-cols-3">
           <section className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border" aria-labelledby="h-controls">
             <h2 id="h-controls" className="text-base font-bold text-foreground">
               {t("dailyControls")}

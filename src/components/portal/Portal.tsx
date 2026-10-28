@@ -179,7 +179,7 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
         {shop && (
           <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
             <h2 className="mb-2.5 text-base font-bold">🕘 {t("timings")}</h2>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
               <TimingCard icon="☀️" label={t("morningShift")} from={formatTime(shop.morning_open, lang)} to={formatTime(shop.morning_close, lang)} />
               <TimingCard icon="🌇" label={t("eveningShift")} from={formatTime(shop.evening_open, lang)} to={formatTime(shop.evening_close, lang)} />
             </div>
@@ -267,11 +267,11 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
 
 function TimingCard({ icon, label, from, to }: { icon: string; label: string; from: string; to: string }) {
   return (
-    <div className="rounded-xl bg-muted px-3 py-2 ring-1 ring-border">
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-muted px-3 py-2.5 ring-1 ring-border sm:flex-col sm:items-start sm:gap-0.5">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         <span aria-hidden="true">{icon}</span> {label}
       </p>
-      <p className="text-sm font-extrabold tabular-nums sm:text-lg">
+      <p className="whitespace-nowrap text-base font-extrabold tabular-nums sm:text-lg">
         {from} – {to}
       </p>
     </div>
