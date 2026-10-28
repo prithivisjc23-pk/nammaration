@@ -195,15 +195,15 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
                 <li
                   key={s.key}
                   className={cn(
-                    "flex items-center gap-2 rounded-xl border-2 px-2.5 py-2",
+                    "flex items-center gap-1.5 rounded-xl border-2 px-2 py-2 sm:gap-2 sm:px-2.5",
                     on ? "border-primary-border bg-primary-soft" : "border-destructive-border bg-destructive-soft",
                   )}
                 >
-                  <span className="text-xl" aria-hidden="true">
+                  <span className="text-lg sm:text-xl" aria-hidden="true">
                     {s.icon}
                   </span>
                   <span className="flex min-w-0 flex-col">
-                    <span className="break-words text-sm font-bold leading-tight text-foreground">{lang === "ta" ? s.ta : s.en}</span>
+                    <span className="break-words text-[13px] font-bold leading-tight text-foreground sm:text-sm">{lang === "ta" ? s.ta : s.en}</span>
                     <span className={cn("text-xs font-bold", on ? "text-primary-strong" : "text-destructive-strong")}>
                       {on ? `● ${t("inStock")}` : `○ ${t("outStock")}`}
                     </span>
@@ -267,8 +267,8 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
 
 function TimingCard({ icon, label, from, to }: { icon: string; label: string; from: string; to: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl bg-muted px-3 py-2.5 ring-1 ring-border sm:flex-col sm:items-start sm:gap-0.5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-xl bg-muted px-3 py-2.5 ring-1 ring-border sm:flex-col sm:items-start">
+      <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         <span aria-hidden="true">{icon}</span> {label}
       </p>
       <p className="whitespace-nowrap text-base font-extrabold tabular-nums sm:text-lg">
