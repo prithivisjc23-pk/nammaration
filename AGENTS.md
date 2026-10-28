@@ -23,3 +23,4 @@
 - `shops.status` (open/lunch/closed) is the source of truth; `is_open` is deprecated and kept in sync by trigger.
 - Theme: `.dark` class on <html>, set before hydration by `THEME_BOOT_SCRIPT`; all colors are tokens with light and dark values in `src/styles.css`.
 - SMS dispatch is simulated (progress animation + `sms_logs` row); no SMS provider is wired yet.
+- The sticky top bar for /dashboard and /portal is the shared `AppHeader` component; change it once so both stay one row on phones.

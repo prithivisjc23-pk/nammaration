@@ -18,5 +18,10 @@
 - [x] Tamil / English on all new screens
 - [x] Tests for new rules + end-to-end check
 
+## Layout cleanup (28 Oct)
+- [x] Remove Shop Timings editor from shopkeeper dashboard
+- [x] Dashboard fits one screen on desktop (3-column grid)
+- [x] Cardholder phone view: one-row top bar, tighter spacing, safe bottom padding
+
 ## Waiting on user
 - [ ] Existing shopkeeper data import (old data lives only in each shopkeeper's browser)
