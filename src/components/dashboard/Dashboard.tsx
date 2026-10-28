@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
-import { BrandMark, LangToggle } from "@/components/LangToggle";
+import { BrandMark, LangToggle, ThemeToggle } from "@/components/LangToggle";
 import {
   CROWD,
   STOCK_ITEMS,
@@ -13,29 +13,42 @@ import {
   isSmsLocked,
   monthKey,
   monthLabel,
+  parseStatus,
   parseStock,
   searchCustomers,
   type CrowdLevel,
+  type ShopStatus,
   type SmsType,
   type StockKey,
 } from "@/lib/ration";
-import { customersQuery, shopQuery, smsLogsQuery, type Customer, type Shop } from "@/lib/shop-data";
+import { customersQuery, resolveHome, shopQuery, smsLogsQuery, type Customer, type Shop } from "@/lib/shop-data";
 import { cn } from "@/lib/utils";
 import {
   AddCustomerDialog,
   ConfirmSmsDialog,
   HistoryDialog,
   RegistryDialog,
+  ResetCardPasswordDialog,
   ResetDialog,
   SmsDispatchDialog,
   type DispatchState,
 } from "./dialogs";
-import { CounterGrid, CustomerRow } from "./parts";
+import { CounterGrid, CustomerRow, StatusControl, TimingsEditor } from "./parts";
 
 export function Dashboard({ userId }: { userId: string }) {
   const { t } = useLang();
   const shopQ = useQuery(shopQuery(userId));
   const logout = useLogout();
+  const navigate = useNavigate();
+
+  // A cardholder who lands here belongs on their portal.
+  useEffect(() => {
+    if (shopQ.isSuccess && !shopQ.data) {
+      void resolveHome(userId).then((home) => {
+        if (home === "/portal") navigate({ to: "/portal", replace: true });
+      });
+    }
+  }, [shopQ.isSuccess, shopQ.data, userId, navigate]);
 
   if (shopQ.isPending) {
     return <CenteredNote>{t("loading")}</CenteredNote>;
@@ -87,6 +100,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
   const smsLogs = smsQ.data ?? [];
   const stock = parseStock(shop.stock);
   const crowd = shop.crowd as CrowdLevel;
+  const status = parseStatus(shop.status);
   const counts = countCustomers(customers);
 
   const [search, setSearch] = useState("");
@@ -96,18 +110,38 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
   const [resetOpen, setResetOpen] = useState(false);
   const [confirmType, setConfirmType] = useState<SmsType | null>(null);
   const [dispatch, setDispatch] = useState<DispatchState | null>(null);
+  const [pwFor, setPwFor] = useState<Customer | null>(null);
   const stockRef = useRef<HTMLDivElement>(null);
 
   const shopKey = shopQuery(userId).queryKey;
   const custKey = customersQuery(shop.id).queryKey;
 
-  async function updateShop(patch: Partial<Pick<Shop, "is_open" | "crowd" | "stock" | "cycle">>) {
+  // Cardholders can self-register into this shop: keep the list live.
+  useEffect(() => {
+    const channel = supabase
+      .channel(`shop-customers-${shop.id}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers", filter: `shop_id=eq.${shop.id}` }, () => {
+        void qc.invalidateQueries({ queryKey: customersQuery(shop.id).queryKey });
+      })
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [shop.id, qc]);
+
+  async function updateShop(
+    patch: Partial<
+      Pick<Shop, "status" | "crowd" | "stock" | "cycle" | "morning_open" | "morning_close" | "evening_open" | "evening_close">
+    >,
+  ): Promise<boolean> {
     qc.setQueryData(shopKey, (old) => (old ? { ...old, ...patch } : old));
     const { error } = await supabase.from("shops").update(patch).eq("id", shop.id);
     if (error) {
       toast.error(t("tError"));
       qc.invalidateQueries({ queryKey: shopKey });
+      return false;
     }
+    return true;
   }
 
   async function markCollected(c: Customer) {
@@ -148,7 +182,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
   function openSms(type: SmsType) {
     if (dispatch && !dispatch.done) return;
-    if (isSmsLocked(type, shop.is_open)) {
+    if (isSmsLocked(type, status)) {
       toast.error(`🔒 ${t(type === "morning" ? "lockMorning" : "lockEvening")}`);
       return;
     }
@@ -161,7 +195,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
   function startDispatch(type: SmsType) {
     setConfirmType(null);
-    if (isSmsLocked(type, shop.is_open)) return;
+    if (isSmsLocked(type, status)) return;
     const targets = customers.filter((c) => c.status !== "collected");
     if (!targets.length) return void toast.error(`⚠️ ${t("tNoPending")}`);
     setDispatch({
@@ -169,7 +203,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
       total: targets.length,
       sent: 0,
       done: false,
-      message: buildSmsMessage(type, { shopNumber: shop.shop_number, isOpen: shop.is_open, crowd, stock }),
+      message: buildSmsMessage(type, { shopNumber: shop.shop_number, status, crowd, stock }),
       recipientIds: targets.map((c) => c.id),
     });
   }
@@ -234,13 +268,14 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
           <div className="flex min-w-0 items-center gap-3">
             <BrandMark className="h-10 w-10 rounded-xl text-xl" />
             <div className="min-w-0">
-              <p className="truncate text-base font-extrabold leading-tight">{t("appName")}</p>
+              <p className="truncate text-base font-extrabold leading-tight">{shop.shop_name || t("appName")}</p>
               <p className="truncate text-xs text-ink-muted">
                 {t("shop")} #{shop.shop_number} · {shop.district} · {shop.taluk}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <LangToggle dark />
             <button
               type="button"
@@ -287,34 +322,14 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
             <h2 id="h-controls" className="text-base font-bold text-foreground">
               {t("dailyControls")}
             </h2>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={shop.is_open}
-              onClick={() => updateShop({ is_open: !shop.is_open })}
-              className={cn(
-                "flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-5 text-left text-primary-foreground shadow-md transition",
-                shop.is_open ? "bg-primary hover:bg-primary-hover" : "bg-destructive hover:bg-destructive-hover",
-              )}
-            >
-              <span className="flex flex-col">
-                <span className="text-xl font-extrabold tracking-wide sm:text-2xl">
-                  {shop.is_open ? "🟢" : "🔴"} {shop.is_open ? t("shopOpen") : t("shopClosed")}
-                </span>
-                <span className="text-xs font-medium opacity-90">
-                  {shop.is_open ? bi("கடை திறந்துள்ளது", "SHOP OPEN") : bi("கடை மூடப்பட்டது", "SHOP CLOSED")} ·{" "}
-                  {t("tapToggle")}
-                </span>
-              </span>
-              <span className="relative h-9 w-16 shrink-0 rounded-full bg-primary-foreground/30" aria-hidden="true">
-                <span
-                  className={cn(
-                    "absolute top-1 h-7 w-7 rounded-full bg-primary-foreground shadow transition-all",
-                    shop.is_open ? "left-8" : "left-1",
-                  )}
-                />
-              </span>
-            </button>
+            <StatusControl value={status} onChange={(next: ShopStatus) => updateShop({ status: next })} />
+            <TimingsEditor
+              shop={shop}
+              onSave={async (v) => {
+                const ok = await updateShop(v);
+                if (ok) toast.success(`🕘 ${t("tTimings")}`);
+              }}
+            />
 
             <div>
               <h3 className="mb-2 text-sm font-semibold text-secondary-foreground">{t("crowdLevel")}</h3>
@@ -389,7 +404,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
               🎯 {t("target", counts.pending)}
             </p>
             {(["morning", "evening"] as const).map((type) => {
-              const locked = isSmsLocked(type, shop.is_open);
+              const locked = isSmsLocked(type, status);
               return (
                 <button
                   key={type}
@@ -422,7 +437,8 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
               );
             })}
             <p className="rounded-lg bg-ink-3/60 px-3 py-2 text-xs font-semibold text-ink-foreground" aria-live="polite">
-              {shop.is_open ? "🟢" : "🔴"} {t(shop.is_open ? "lockedHintOpen" : "lockedHintClosed")}
+              {status === "open" ? "🟢" : status === "lunch" ? "🟠" : "🔴"}{" "}
+              {t(status === "open" ? "lockedHintOpen" : status === "lunch" ? "lunchHint" : "lockedHintClosed")}
             </p>
             <p className="text-xs text-ink-muted">ℹ️ {t("smsNote")}</p>
             <button
@@ -505,7 +521,14 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
           toast.success(`➕ ${t("tSaved")}`);
         }}
       />
-      <RegistryDialog open={registryOpen} onOpenChange={setRegistryOpen} customers={customers} onCollect={markCollected} />
+      <RegistryDialog
+        open={registryOpen}
+        onOpenChange={setRegistryOpen}
+        customers={customers}
+        onCollect={markCollected}
+        onResetPassword={setPwFor}
+      />
+      <ResetCardPasswordDialog customer={pwFor} onClose={() => setPwFor(null)} />
       <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} logs={smsLogs} />
       <ResetDialog open={resetOpen} onOpenChange={setResetOpen} total={counts.total} onConfirm={monthReset} />
       <ConfirmSmsDialog
