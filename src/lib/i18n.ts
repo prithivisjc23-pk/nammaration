@@ -117,7 +117,7 @@ const ta: Dict = {
 export const DICTS: Record<Lang, Dict> = { en, ta };
 export type I18nKey = keyof Dict;
 
-type Args<K extends I18nKey> = Dict[K] extends (...a: infer A) => string ? A : [];
+export type Args<K extends I18nKey> = Dict[K] extends (...a: infer A) => string ? A : [];
 
 export function translate<K extends I18nKey>(lang: Lang, key: K, ...args: Args<K>): string {
   const v = DICTS[lang][key] as Entry;

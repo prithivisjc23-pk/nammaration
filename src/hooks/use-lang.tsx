@@ -1,15 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Lang } from "@/lib/ration";
-import { translate, type I18nKey } from "@/lib/i18n";
+import { translate, type Args, type I18nKey } from "@/lib/i18n";
 
 const STORAGE_KEY = "nr_lang_v1";
 
 type LangContextValue = {
   lang: Lang;
   setLang: (l: Lang) => void;
-  t: typeof translate extends (lang: Lang, ...rest: infer R) => string
-    ? <K extends I18nKey>(key: K, ...args: Parameters<typeof translate<K>> extends [Lang, K, ...infer A] ? A : never) => string
-    : never;
+  t: <K extends I18nKey>(key: K, ...args: Args<K>) => string;
   bi: (en: string, ta: string) => string;
 };
 
@@ -44,8 +42,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
     () => ({
       lang,
       setLang,
-      t: ((key: I18nKey, ...args: never[]) =>
-        (translate as (l: Lang, k: I18nKey, ...a: never[]) => string)(lang, key, ...args)) as LangContextValue["t"],
+      t: (key, ...args) => translate(lang, key, ...args),
       bi: (en: string, ta: string) => (lang === "ta" ? ta : en),
     }),
     [lang, setLang],
