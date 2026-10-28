@@ -94,6 +94,6 @@ describe("counters and search", () => {
 describe("SMS message", () => {
   it("morning open message lists only available stock", () => {
     const msg = buildSmsMessage("morning", { shopNumber: "1234", status: "open", crowd: "low", stock: DEFAULT_STOCK });
-    expect(msg).toContain("Shop #1234: Shop is OPEN today. Available: Rice, Sugar, Oil. Crowd: Low.");
+    expect(msg).toContain("Shop #1234: Shop is OPEN today. Available: Rice, Sugar, Oil, Paruppu (Toor Dal). Crowd: Low.");
   });
 });
