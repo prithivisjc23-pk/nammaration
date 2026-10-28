@@ -3,6 +3,8 @@
 export type Lang = "en" | "ta";
 export type CrowdLevel = "low" | "medium" | "heavy";
 export type SmsType = "morning" | "evening";
+export type ShopStatus = "open" | "lunch" | "closed";
+export const SHOP_STATUSES: ShopStatus[] = ["open", "lunch", "closed"];
 export type StockKey = "rice" | "sugar" | "oil" | "wheat" | "kerosene";
 export type StockState = Record<StockKey, boolean>;
 
@@ -59,8 +61,37 @@ export const normalizeMobile = (s: string) => s.replace(/\D/g, "");
 
 export const isValidMobile = (mobile: string) => /^[6-9]\d{9}$/.test(mobile);
 
-/** Morning alerts need the shop OPEN; evening alerts need the shop CLOSED. */
-export const isSmsLocked = (type: SmsType, isOpen: boolean) => (type === "morning" ? !isOpen : isOpen);
+/** Morning alerts need the shop OPEN; evening alerts need the shop CLOSED. Lunch break locks both. */
+export const isSmsLocked = (type: SmsType, status: ShopStatus) =>
+  type === "morning" ? status !== "open" : status !== "closed";
+
+export const parseStatus = (s: string): ShopStatus => (s === "lunch" || s === "closed" ? s : "open");
+
+/** Synthetic sign-in address for cardholders, who log in with their Smart Card number. */
+export const cardholderEmail = (card: string) => `card-${normCard(card).toLowerCase()}@cardholder.nammaration.app`;
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+
+export type ShopTimings = { morningOpen: string; morningClose: string; eveningOpen: string; eveningClose: string };
+
+/** Times are HH:MM (24h) and must run in order: morning open < close <= evening open < close. */
+export function isValidTimings(t: ShopTimings) {
+  const all = [t.morningOpen, t.morningClose, t.eveningOpen, t.eveningClose];
+  if (!all.every((x) => TIME_RE.test(x))) return false;
+  const [a, b, c, d] = all.map(toMinutes) as [number, number, number, number];
+  return a < b && b <= c && c < d;
+}
+
+export function formatTime(hhmm: string, lang: Lang) {
+  if (!TIME_RE.test(hhmm)) return hhmm;
+  const h = Number(hhmm.slice(0, 2));
+  const m = hhmm.slice(3, 5);
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const pm = h >= 12;
+  const suffix = lang === "ta" ? (pm ? "மாலை" : "காலை") : pm ? "PM" : "AM";
+  return `${String(h12).padStart(2, "0")}:${m} ${suffix}`;
+}
 
 export type CustomerLike = { status: string; card: string; mobile: string; name: string };
 
@@ -90,14 +121,14 @@ export function sortRegistry<T extends CustomerLike>(customers: T[]): T[] {
 
 export function buildSmsMessage(
   type: SmsType,
-  shop: { shopNumber: string; isOpen: boolean; crowd: CrowdLevel; stock: StockState },
+  shop: { shopNumber: string; status: ShopStatus; crowd: CrowdLevel; stock: StockState },
 ) {
   const avail = STOCK_ITEMS.filter((s) => shop.stock[s.key]);
   const availEn = avail.map((s) => s.en).join(", ") || "None";
   const availTa = avail.map((s) => s.ta).join(", ") || "இல்லை";
   const id = shop.shopNumber;
   if (type === "morning") {
-    return shop.isOpen
+    return shop.status === "open"
       ? `நம்ம ரேஷன் | கடை #${id}: இன்று கடை திறந்துள்ளது. கிடைப்பவை: ${availTa}. கூட்டம்: ${CROWD[shop.crowd].ta}. உங்கள் பொருட்களை வாங்கவும்.\n\nNamma Ration | Shop #${id}: Shop is OPEN today. Available: ${availEn}. Crowd: ${CROWD[shop.crowd].en}. Please collect your ration.`
       : `நம்ம ரேஷன் | கடை #${id}: இன்று கடை மூடப்பட்டுள்ளது. தயவுசெய்து அடுத்த வேலை நாளில் வரவும்.\n\nNamma Ration | Shop #${id}: Shop is CLOSED today. Please visit on the next working day.`;
   }
