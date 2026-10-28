@@ -101,9 +101,8 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
         const prev = qc.getQueryData(shopKey);
         qc.setQueryData(shopKey, (old) => (old ? { ...old, ...next } : old));
         if (!prev) return;
-        const tr = (k: Parameters<typeof t>[0]) => t(k as never);
         if (prev.status !== next.status) {
-          const label = tr(statusLabelKey(parseStatus(next.status)));
+          const label = t(statusLabelKey(parseStatus(next.status)));
           notifyRef.current(`${statusIcon(parseStatus(next.status))} ${t("nStatus", label)}`, next.shop_name || `#${next.shop_number}`);
         }
         if (JSON.stringify(parseStock(prev.stock)) !== JSON.stringify(parseStock(next.stock))) {
