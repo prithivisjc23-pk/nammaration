@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ export function Dashboard({ userId }: { userId: string }) {
   return <ShopDashboard shop={shopQ.data} userId={userId} />;
 }
 
-function CenteredNote({ children }: { children: React.ReactNode }) {
+function CenteredNote({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background px-4 text-center text-muted-foreground">
       {children}
