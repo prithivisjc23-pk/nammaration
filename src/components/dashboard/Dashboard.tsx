@@ -139,8 +139,9 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
       toast.error(t("tError"));
       return;
     }
+    qc.setQueryData(custKey, (old) => old?.map((x) => ({ ...x, status: "pending", collected_at: null })));
     await updateShop({ cycle: monthKey() });
-    await qc.invalidateQueries({ queryKey: custKey });
+    void qc.invalidateQueries({ queryKey: custKey });
     setResetOpen(false);
     toast.success(`🔄 ${t("tReset")}`);
   }
