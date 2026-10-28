@@ -64,7 +64,8 @@ export function AuthScreen() {
       if (active && data.session) void goHome(data.session.user.id);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && event === "SIGNED_IN" && active) void goHome(session.user.id);
+      // Defer: querying inside the auth callback would deadlock the auth client.
+      if (session && event === "SIGNED_IN" && active) setTimeout(() => void goHome(session.user.id), 0);
     });
     return () => {
       active = false;
