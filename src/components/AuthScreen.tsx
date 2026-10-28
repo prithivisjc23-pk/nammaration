@@ -107,7 +107,8 @@ export function AuthScreen() {
         },
       });
       if (signUpError) {
-        return setError(/password/i.test(signUpError.message) ? signUpError.message : t("eGeneric"));
+        // Auth errors (weak password, blocked email domain, rate limit) are already human-readable.
+        return setError(signUpError.message || t("eGeneric"));
       }
       if (data.session) {
         navigate({ to: "/dashboard", replace: true });
