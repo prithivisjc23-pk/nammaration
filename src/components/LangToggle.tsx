@@ -1,4 +1,5 @@
 import { useLang } from "@/hooks/use-lang";
+import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
 export function LangToggle({ dark = false }: { dark?: boolean }) {
@@ -40,5 +41,22 @@ export function BrandMark({ className }: { className?: string }) {
     >
       🌾
     </div>
+  );
+}
+
+export function ThemeToggle() {
+  const { dark, toggle } = useTheme();
+  const { t } = useLang();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={dark}
+      aria-label={t("themeToggle")}
+      title={t("themeToggle")}
+      className="rounded-lg bg-ink-2 px-2.5 py-1.5 text-sm text-ink-foreground hover:bg-ink-3"
+    >
+      {dark ? "☀️" : "🌙"}
+    </button>
   );
 }

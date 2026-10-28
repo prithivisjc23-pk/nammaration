@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { LangProvider } from "@/hooks/use-lang";
+import { THEME_BOOT_SCRIPT } from "@/hooks/use-theme";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -82,10 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0f172a" },
-      { title: "Namma Ration | நம்ம ரேஷன் – Shopkeeper Dashboard" },
+      { title: "Namma Ration | நம்ம ரேஷன் – PDS Shop & Cardholder Portal" },
       {
         name: "description",
-        content: "Namma Ration – Shopkeeper admin dashboard for PDS ration shop management in Tamil Nadu.",
+        content: "Namma Ration – PDS ration shop management for shopkeepers and live shop status for cardholders in Tamil Nadu.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -111,8 +112,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
@@ -141,7 +143,7 @@ function RootComponent() {
       <LangProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        <Toaster position="bottom-center" richColors />
+        <Toaster position="bottom-center" richColors closeButton />
       </LangProvider>
     </QueryClientProvider>
   );
