@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSmsMessage,
+  cardholderEmail,
+  formatTime,
+  isValidTimings,
   countCustomers,
   isSmsLocked,
   isValidCard,
@@ -16,12 +19,35 @@ const c = (name: string, card: string, mobile: string, status = "pending") => ({
 
 describe("SMS lock rules", () => {
   it("allows the morning alert only while the shop is open", () => {
-    expect(isSmsLocked("morning", true)).toBe(false);
-    expect(isSmsLocked("morning", false)).toBe(true);
+    expect(isSmsLocked("morning", "open")).toBe(false);
+    expect(isSmsLocked("morning", "closed")).toBe(true);
   });
   it("allows the evening alert only while the shop is closed", () => {
-    expect(isSmsLocked("evening", false)).toBe(false);
-    expect(isSmsLocked("evening", true)).toBe(true);
+    expect(isSmsLocked("evening", "closed")).toBe(false);
+    expect(isSmsLocked("evening", "open")).toBe(true);
+  });
+  it("locks both alerts during lunch break", () => {
+    expect(isSmsLocked("morning", "lunch")).toBe(true);
+    expect(isSmsLocked("evening", "lunch")).toBe(true);
+  });
+});
+
+describe("shop timings", () => {
+  it("accepts the default 08:30-12:00 / 15:00-18:00 schedule", () => {
+    expect(isValidTimings({ morningOpen: "08:30", morningClose: "12:00", eveningOpen: "15:00", eveningClose: "18:00" })).toBe(true);
+  });
+  it("rejects evening hours that start before the morning ends", () => {
+    expect(isValidTimings({ morningOpen: "08:30", morningClose: "12:00", eveningOpen: "11:00", eveningClose: "18:00" })).toBe(false);
+  });
+  it("shows times as 12-hour clock", () => {
+    expect(formatTime("08:30", "en")).toBe("08:30 AM");
+    expect(formatTime("15:00", "en")).toBe("03:00 PM");
+  });
+});
+
+describe("cardholder sign-in", () => {
+  it("derives the same sign-in address from any spelling of the card number", () => {
+    expect(cardholderEmail("33/g/0123456")).toBe(cardholderEmail("33G 0123456"));
   });
 });
 
@@ -67,7 +93,7 @@ describe("counters and search", () => {
 
 describe("SMS message", () => {
   it("morning open message lists only available stock", () => {
-    const msg = buildSmsMessage("morning", { shopNumber: "1234", isOpen: true, crowd: "low", stock: DEFAULT_STOCK });
+    const msg = buildSmsMessage("morning", { shopNumber: "1234", status: "open", crowd: "low", stock: DEFAULT_STOCK });
     expect(msg).toContain("Shop #1234: Shop is OPEN today. Available: Rice, Sugar, Oil. Crowd: Low.");
   });
 });

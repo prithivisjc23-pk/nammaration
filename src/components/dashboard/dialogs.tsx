@@ -1,4 +1,7 @@
 import { useState, type FormEvent } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { resetCardholderPassword } from "@/lib/cardholder.functions";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
@@ -59,6 +62,7 @@ export function AddCustomerDialog({
     if (!isValidCard(card)) return setError(t("eCard"));
     if (!isValidMobile(mob)) return setError(t("eMobile"));
     if (customers.some((c) => c.card_norm === normCard(card))) return setError(t("eDupCard"));
+    if (customers.some((c) => c.mobile === mob)) return setError(t("eDupMobile"));
     setBusy(true);
     const { data, error: err } = await supabase
       .from("customers")
@@ -66,7 +70,10 @@ export function AddCustomerDialog({
       .select()
       .single();
     setBusy(false);
-    if (err || !data) return setError(err?.code === "23505" ? t("eDupCard") : t("tError"));
+    if (err || !data) {
+      if (err?.code === "23505") return setError(t(err.message.includes("mobile") ? "eDupMobile" : "eDupCard"));
+      return setError(t("tError"));
+    }
     form.reset();
     setMobile("");
     setError(null);
@@ -129,11 +136,13 @@ export function RegistryDialog({
   onOpenChange,
   customers,
   onCollect,
+  onResetPassword,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   customers: Customer[];
   onCollect: (c: Customer) => void;
+  onResetPassword: (c: Customer) => void;
 }) {
   const { t } = useLang();
   const [filter, setFilter] = useState<Filter>("all");
@@ -175,7 +184,25 @@ export function RegistryDialog({
         </div>
         <ul className="scroll-thin flex-1 overflow-y-auto px-5 pb-5">
           {items.length ? (
-            items.map((c) => <CustomerRow key={c.id} customer={c} onCollect={onCollect} className="my-2" />)
+            items.map((c) => (
+              <CustomerRow
+                key={c.id}
+                customer={c}
+                onCollect={onCollect}
+                className="my-2"
+                extra={
+                  c.user_id ? (
+                    <button
+                      type="button"
+                      onClick={() => onResetPassword(c)}
+                      className="mt-1 text-xs font-semibold text-primary-strong hover:underline"
+                    >
+                      🔑 {t("resetPortalPw")}
+                    </button>
+                  ) : null
+                }
+              />
+            ))
           ) : (
             <li className="py-8 text-center text-sm text-muted-foreground">{t("emptyRegistry")}</li>
           )}
@@ -425,6 +452,56 @@ export function SmsDispatchDialog({ state, onClose }: { state: DispatchState | n
             )}
           </>
         )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ResetCardPasswordDialog({ customer, onClose }: { customer: Customer | null; onClose: () => void }) {
+  const { t } = useLang();
+  const reset = useServerFn(resetCardholderPassword);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!customer) return;
+    const password = String(new FormData(e.currentTarget).get("password") ?? "");
+    if (password.length < 6) return setError(t("ePass"));
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await reset({ data: { customerId: customer.id, password } });
+      if (!res.ok) return setError(t("eGeneric"));
+      toast.success(`🔑 ${t("tPwReset")}`);
+      onClose();
+    } catch {
+      setError(t("eGeneric"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog open={!!customer} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className={contentCls}>
+        <DialogTitle className="text-lg font-bold text-foreground">{customer ? t("newPwFor", customer.name) : ""}</DialogTitle>
+        <DialogDescription className="text-sm text-muted-foreground">{customer?.card}</DialogDescription>
+        <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+          <input name="password" type="text" minLength={6} required autoComplete="off" className={inputCls} placeholder={t("newPassword")} />
+          {error && (
+            <p className="rounded-lg bg-destructive-soft px-3 py-2 text-sm font-medium text-destructive-strong" role="alert">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={busy}
+            className="rounded-xl bg-primary px-4 py-3 font-bold text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+          >
+            {busy ? "…" : t("savePassword")}
+          </button>
+        </form>
       </DialogContent>
     </Dialog>
   );

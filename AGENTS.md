@@ -15,5 +15,11 @@
 - All UI text goes through `src/lib/i18n.ts` (en + ta) via `useLang()`; never hardcode user-facing strings in one language.
 - Shopkeeper sign-in resolves username / shop number → email inside the `signInShopkeeper` server function so emails are never exposed to the browser.
 - A shop row is created by the `handle_new_shopkeeper` trigger from sign-up metadata; uniqueness is pre-checked with the `check_shop_registration` RPC.
-- Shop, customer and SMS history access is owner-only through RLS (`owns_shop`); the browser client talks to tables directly.
+- Two roles derived from data, not a roles table: a shop owner (`shops.owner_id`) uses /dashboard, a cardholder (`customers.user_id`) uses /portal; `resolveHome` routes after sign-in.
+- RLS: shop owners see their shop, customers and SMS history (`owns_shop`); cardholders see only their own card row and their shop (`is_shop_customer`). `customers.user_id` can only be set by service-role code (trigger), so owners cannot grant portal access.
+- Cardholders sign in with a synthetic email derived from the Smart Card number (`cardholderEmail`); accounts are created confirmed by the `registerCardholder` server function, and shopkeepers reset portal passwords via `resetCardholderPassword`.
+- Card number and mobile are each globally unique on `customers` (1 card ↔ 1 mobile).
+- Live updates use Realtime on `shops` and `customers`; portal alerts are in-app toasts + browser Notification while the page is open (no push service).
+- `shops.status` (open/lunch/closed) is the source of truth; `is_open` is deprecated and kept in sync by trigger.
+- Theme: `.dark` class on <html>, set before hydration by `THEME_BOOT_SCRIPT`; all colors are tokens with light and dark values in `src/styles.css`.
 - SMS dispatch is simulated (progress animation + `sms_logs` row); no SMS provider is wired yet.

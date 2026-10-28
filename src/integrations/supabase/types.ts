@@ -20,33 +20,39 @@ export type Database = {
           card_norm: string
           collected_at: string | null
           created_at: string
+          district: string | null
           id: string
           mobile: string
           name: string
           shop_id: string
           status: string
+          user_id: string | null
         }
         Insert: {
           card: string
           card_norm: string
           collected_at?: string | null
           created_at?: string
+          district?: string | null
           id?: string
           mobile: string
           name: string
           shop_id: string
           status?: string
+          user_id?: string | null
         }
         Update: {
           card?: string
           card_norm?: string
           collected_at?: string | null
           created_at?: string
+          district?: string | null
           id?: string
           mobile?: string
           name?: string
           shop_id?: string
           status?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -64,10 +70,17 @@ export type Database = {
           crowd: string
           cycle: string
           district: string
+          evening_close: string
+          evening_open: string
           id: string
           is_open: boolean
+          mobile: string
+          morning_close: string
+          morning_open: string
           owner_id: string
+          shop_name: string
           shop_number: string
+          status: string
           stock: Json
           taluk: string
           updated_at: string
@@ -79,10 +92,17 @@ export type Database = {
           crowd?: string
           cycle?: string
           district: string
+          evening_close?: string
+          evening_open?: string
           id?: string
           is_open?: boolean
+          mobile?: string
+          morning_close?: string
+          morning_open?: string
           owner_id: string
+          shop_name?: string
           shop_number: string
+          status?: string
           stock?: Json
           taluk: string
           updated_at?: string
@@ -94,10 +114,17 @@ export type Database = {
           crowd?: string
           cycle?: string
           district?: string
+          evening_close?: string
+          evening_open?: string
           id?: string
           is_open?: boolean
+          mobile?: string
+          morning_close?: string
+          morning_open?: string
           owner_id?: string
+          shop_name?: string
           shop_number?: string
+          status?: string
           stock?: Json
           taluk?: string
           updated_at?: string
@@ -152,6 +179,15 @@ export type Database = {
       check_shop_registration: {
         Args: { _shop_number: string; _username: string }
         Returns: Json
+      }
+      is_shop_customer: { Args: { _shop_id: string }; Returns: boolean }
+      list_shops_public: {
+        Args: never
+        Returns: {
+          district: string
+          shop_name: string
+          shop_number: string
+        }[]
       }
       owns_shop: { Args: { _shop_id: string }; Returns: boolean }
     }

@@ -4,15 +4,15 @@ import { AuthScreen } from "@/components/AuthScreen";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Namma Ration | நம்ம ரேஷன் – Shopkeeper Login" },
+      { title: "Namma Ration | நம்ம ரேஷன் – Shop & Cardholder Login" },
       {
         name: "description",
-        content: "Log in or register your PDS ration shop to manage stock, crowd level, customers and SMS alerts.",
+        content: "Shopkeepers manage stock, status, timings and SMS alerts. Cardholders check live shop status, stock and their collection status.",
       },
-      { property: "og:title", content: "Namma Ration | நம்ம ரேஷன் – Shopkeeper Login" },
+      { property: "og:title", content: "Namma Ration | நம்ம ரேஷன் – Shop & Cardholder Login" },
       {
         property: "og:description",
-        content: "Shopkeeper admin console for Tamil Nadu PDS ration shops.",
+        content: "Live ration shop status and management for Tamil Nadu PDS shops and cardholders.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
