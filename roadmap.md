@@ -13,7 +13,7 @@
 - [x] Customer portal: registration (card, mobile, name, district, shop code dropdown), sign-in
 - [x] One smart card = one mobile, registered once
 - [x] Customer dashboard: live status banner, timings, stock grid, own collection status — live updates
-- [x] Push notifications to customers on open / status / stock changes
+- [x] Customer alerts on open / status / stock changes (while portal is open; full push needs Firebase later)
 - [x] Dark / light theme toggle
 - [x] Tamil / English on all new screens
 - [x] Tests for new rules + end-to-end check
