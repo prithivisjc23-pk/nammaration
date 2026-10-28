@@ -158,7 +158,7 @@ export function TimingsEditor({ shop, onSave }: { shop: Shop; onSave: (v: Timing
           setError(false);
           setV((old) => ({ ...old, [k]: e.target.value }));
         }}
-        className="rounded-lg border border-input bg-card px-2 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+        className="rounded-lg border border-input bg-card px-2 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 dark:[color-scheme:dark]"
       />
     </label>
   );
