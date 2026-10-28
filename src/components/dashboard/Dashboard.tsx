@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
-import { BrandMark, LangToggle, ThemeToggle } from "@/components/LangToggle";
+import { AppHeader } from "@/components/AppHeader";
 import {
   CROWD,
   STOCK_ITEMS,
@@ -33,7 +33,7 @@ import {
   SmsDispatchDialog,
   type DispatchState,
 } from "./dialogs";
-import { CounterGrid, CustomerRow, StatusControl, TimingsEditor } from "./parts";
+import { CounterGrid, CustomerRow, StatusControl } from "./parts";
 
 export function Dashboard({ userId }: { userId: string }) {
   const { t } = useLang();
@@ -130,9 +130,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
   }, [shop.id, qc]);
 
   async function updateShop(
-    patch: Partial<
-      Pick<Shop, "status" | "crowd" | "stock" | "cycle" | "morning_open" | "morning_close" | "evening_open" | "evening_close">
-    >,
+    patch: Partial<Pick<Shop, "status" | "crowd" | "stock" | "cycle">>,
   ): Promise<boolean> {
     qc.setQueryData(shopKey, (old) => (old ? { ...old, ...patch } : old));
     const { error } = await supabase.from("shops").update(patch).eq("id", shop.id);
@@ -263,33 +261,14 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-30 bg-ink text-ink-foreground shadow-lg">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <BrandMark className="h-10 w-10 rounded-xl text-xl" />
-            <div className="min-w-0">
-              <p className="truncate text-base font-extrabold leading-tight">{shop.shop_name || t("appName")}</p>
-              <p className="truncate text-xs text-ink-muted">
-                {[`${t("shop")} #${shop.shop_number}`, shop.district, shop.taluk].filter(Boolean).join(" · ")}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <LangToggle dark />
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-lg bg-ink-2 px-3 py-1.5 text-sm font-semibold text-ink-foreground hover:bg-destructive-hover"
-            >
-              🚪 {t("logout")}
-            </button>
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        title={shop.shop_name || t("appName")}
+        subtitle={[`${t("shop")} #${shop.shop_number}`, shop.district, shop.taluk].filter(Boolean).join(" · ")}
+        onLogout={logout}
+      />
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      <main className="mx-auto flex max-w-7xl flex-col gap-3 px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:gap-4 sm:px-4 sm:pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <p className="text-sm font-semibold text-secondary-foreground">
             📅 <time dateTime={new Date().toISOString().slice(0, 10)}>{today}</time>
           </p>
@@ -301,7 +280,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
         {shop.cycle !== monthKey() && (
           <div
-            className="flex flex-col gap-3 rounded-2xl bg-warning-mid p-4 text-warning-strong ring-1 ring-warning-border sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-2 rounded-xl bg-warning-mid px-4 py-3 text-warning-strong ring-1 ring-warning-border sm:flex-row sm:items-center sm:justify-between"
             role="alert"
           >
             <p className="text-sm font-semibold">📆 {t("newMonthBanner")}</p>
@@ -317,19 +296,12 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
         <CounterGrid counts={counts} />
 
-        <div className="grid gap-5 lg:grid-cols-2">
-          <section className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border" aria-labelledby="h-controls">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 md:items-start lg:grid-cols-3">
+          <section className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border" aria-labelledby="h-controls">
             <h2 id="h-controls" className="text-base font-bold text-foreground">
               {t("dailyControls")}
             </h2>
             <StatusControl value={status} onChange={(next: ShopStatus) => updateShop({ status: next })} />
-            <TimingsEditor
-              shop={shop}
-              onSave={async (v) => {
-                const ok = await updateShop(v);
-                if (ok) toast.success(`🕘 ${t("tTimings")}`);
-              }}
-            />
 
             <div>
               <h3 className="mb-2 text-sm font-semibold text-secondary-foreground">{t("crowdLevel")}</h3>
@@ -349,7 +321,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                       aria-checked={on}
                       onClick={() => updateShop({ crowd: k })}
                       className={cn(
-                        "rounded-xl border-2 px-2 py-3 text-sm font-bold transition",
+                        "rounded-xl border-2 px-2 py-2 text-sm font-bold transition",
                         on ? onCls : "border-border bg-muted text-secondary-foreground hover:border-input",
                       )}
                     >
@@ -362,7 +334,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
             <div>
               <h3 className="mb-2 text-sm font-semibold text-secondary-foreground">{t("stock")}</h3>
-              <div ref={stockRef} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <div ref={stockRef} className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-2">
                 {STOCK_ITEMS.map((s) => {
                   const on = stock[s.key];
                   return (
@@ -372,17 +344,17 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                       aria-pressed={on}
                       onClick={() => updateShop({ stock: { ...stock, [s.key as StockKey]: !on } })}
                       className={cn(
-                        "flex items-center gap-2 rounded-xl border-2 px-3 py-3 text-left transition",
+                        "flex items-center gap-2 rounded-xl border-2 px-2.5 py-2 text-left transition",
                         on ? "border-primary-border bg-primary-soft" : "border-border bg-muted opacity-80",
                       )}
                     >
-                      <span className="text-xl" aria-hidden="true">
+                      <span className="text-lg" aria-hidden="true">
                         {s.icon}
                       </span>
                       <span className="flex min-w-0 flex-col">
                         <span className="break-words text-sm font-bold leading-tight text-foreground">{s.ta}</span>
-                        <span className="text-xs font-medium text-muted-foreground">{s.en}</span>
-                        <span className={cn("text-xs font-semibold", on ? "text-primary-strong" : "text-destructive-hover")}>
+                        <span className="text-xs font-medium leading-tight text-muted-foreground">{s.en}</span>
+                        <span className={cn("text-xs font-semibold leading-tight", on ? "text-primary-strong" : "text-destructive-hover")}>
                           {on ? `● ${t("inStock")}` : `○ ${t("outStock")}`}
                         </span>
                       </span>
@@ -393,49 +365,113 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
             </div>
           </section>
 
-          <section className="flex flex-col gap-4 rounded-2xl bg-ink-2 p-5 text-ink-foreground shadow-sm" aria-labelledby="h-sms">
+          <section className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border" aria-labelledby="h-cust">
+            <h2 id="h-cust" className="text-base font-bold text-foreground">
+              {t("customers")}
+            </h2>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg" aria-hidden="true">
+                🔍
+              </span>
+              <label htmlFor="search" className="sr-only">
+                {t("searchPh")}
+              </label>
+              <input
+                id="search"
+                type="search"
+                autoComplete="off"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("searchPh")}
+                className="w-full rounded-xl border-2 border-border bg-muted py-3 pl-11 pr-4 text-base outline-none focus:border-primary focus:bg-card"
+              />
+            </div>
+            <div className="flex flex-col gap-2" aria-live="polite">
+              {search.trim().length < 2 ? (
+                <p className="text-sm text-muted-foreground">{t("searchHint")}</p>
+              ) : results.length ? (
+                <ul className="flex max-h-80 flex-col gap-2 overflow-y-auto overscroll-contain pr-0.5">
+                  {results.map((c) => (
+                    <CustomerRow key={c.id} customer={c} onCollect={markCollected} />
+                  ))}
+                </ul>
+              ) : (
+                <p className="rounded-xl bg-muted px-3 py-3 text-sm text-muted-foreground">{t("noMatch")}</p>
+              )}
+            </div>
+            <div className="mt-auto grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAddOpen(true)}
+                className="rounded-xl bg-primary px-3 py-3 text-sm font-bold text-primary-foreground shadow-sm hover:bg-primary-hover"
+              >
+                ➕ {t("registerCustomer")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegistryOpen(true)}
+                className="rounded-xl bg-ink px-3 py-3 text-sm font-bold text-ink-foreground shadow-sm hover:bg-ink-3"
+              >
+                👥 {t("viewAll")} ({counts.pending}/{counts.total})
+              </button>
+              <button
+                type="button"
+                onClick={() => setResetOpen(true)}
+                className="col-span-2 rounded-xl border-2 border-warning-border bg-warning-soft px-3 py-2.5 text-sm font-bold text-warning-strong hover:bg-warning-mid"
+              >
+                🔄 {t("resetMonth")}
+              </button>
+            </div>
+          </section>
+
+          <section
+            className="flex flex-col gap-3 rounded-2xl bg-ink-2 p-4 text-ink-foreground shadow-sm md:col-span-2 lg:col-span-1"
+            aria-labelledby="h-sms"
+          >
             <h2 id="h-sms" className="text-base font-bold">
               {t("smsPanel")}
             </h2>
             <p
-              className="rounded-xl bg-primary/15 px-3 py-2.5 text-sm font-bold text-primary-glow ring-1 ring-primary/40"
+              className="rounded-xl bg-primary/15 px-3 py-2 text-sm font-bold text-primary-glow ring-1 ring-primary/40"
               aria-live="polite"
             >
               🎯 {t("target", counts.pending)}
             </p>
-            {(["morning", "evening"] as const).map((type) => {
-              const locked = isSmsLocked(type, status);
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => openSms(type)}
-                  disabled={dispatching}
-                  aria-disabled={locked}
-                  title={locked ? t(type === "morning" ? "lockMorning" : "lockEvening") : undefined}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl px-4 py-4 text-left font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50",
-                    type === "morning" ? "bg-primary hover:bg-primary-hover" : "bg-evening hover:bg-evening-hover",
-                    locked ? "cursor-not-allowed opacity-40 grayscale" : "shadow",
-                  )}
-                >
-                  <span className="text-2xl" aria-hidden="true">
-                    {type === "morning" ? "🚀" : "🌙"}
-                  </span>
-                  <span className="flex flex-1 flex-col">
-                    <span>{t(type === "morning" ? "smsMorning" : "smsEvening")}</span>
-                    <span className="text-xs font-medium opacity-80">
-                      {type === "morning"
-                        ? bi("காலை SMS அறிவிப்பு", "Morning SMS Alert")
-                        : bi("மாலை SMS அறிவிப்பு", "Evening Close SMS Alert")}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              {(["morning", "evening"] as const).map((type) => {
+                const locked = isSmsLocked(type, status);
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => openSms(type)}
+                    disabled={dispatching}
+                    aria-disabled={locked}
+                    title={locked ? t(type === "morning" ? "lockMorning" : "lockEvening") : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl px-4 py-3 text-left font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50",
+                      type === "morning" ? "bg-primary hover:bg-primary-hover" : "bg-evening hover:bg-evening-hover",
+                      locked ? "cursor-not-allowed opacity-40 grayscale" : "shadow",
+                    )}
+                  >
+                    <span className="text-2xl" aria-hidden="true">
+                      {type === "morning" ? "🚀" : "🌙"}
                     </span>
-                  </span>
-                  <span className="text-xl" aria-hidden="true">
-                    {locked ? "🔒" : ""}
-                  </span>
-                </button>
-              );
-            })}
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span>{t(type === "morning" ? "smsMorning" : "smsEvening")}</span>
+                      <span className="text-xs font-medium opacity-80">
+                        {type === "morning"
+                          ? bi("காலை SMS அறிவிப்பு", "Morning SMS Alert")
+                          : bi("மாலை SMS அறிவிப்பு", "Evening Close SMS Alert")}
+                      </span>
+                    </span>
+                    <span className="text-xl" aria-hidden="true">
+                      {locked ? "🔒" : ""}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
             <p className="rounded-lg bg-ink-3/60 px-3 py-2 text-xs font-semibold text-ink-foreground" aria-live="polite">
               {status === "open" ? "🟢" : status === "lunch" ? "🟠" : "🔴"}{" "}
               {t(status === "open" ? "lockedHintOpen" : status === "lunch" ? "lunchHint" : "lockedHintClosed")}
@@ -444,71 +480,12 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
             <button
               type="button"
               onClick={() => setHistoryOpen(true)}
-              className="rounded-xl border border-ink-3 px-4 py-3 text-sm font-semibold text-ink-foreground hover:bg-ink-3"
+              className="rounded-xl border border-ink-3 px-4 py-2.5 text-sm font-semibold text-ink-foreground hover:bg-ink-3"
             >
               📜 {t("viewHistory")} ({smsLogs.length})
             </button>
           </section>
         </div>
-
-        <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border" aria-labelledby="h-cust">
-          <h2 id="h-cust" className="text-base font-bold text-foreground">
-            {t("customers")}
-          </h2>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg" aria-hidden="true">
-              🔍
-            </span>
-            <label htmlFor="search" className="sr-only">
-              {t("searchPh")}
-            </label>
-            <input
-              id="search"
-              type="search"
-              autoComplete="off"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("searchPh")}
-              className="w-full rounded-xl border-2 border-border bg-muted py-4 pl-11 pr-4 text-base outline-none focus:border-primary focus:bg-card"
-            />
-          </div>
-          <div className="flex flex-col gap-2" aria-live="polite">
-            {search.trim().length < 2 ? (
-              <p className="text-sm text-muted-foreground">{t("searchHint")}</p>
-            ) : results.length ? (
-              <ul className="flex flex-col gap-2">
-                {results.map((c) => (
-                  <CustomerRow key={c.id} customer={c} onCollect={markCollected} />
-                ))}
-              </ul>
-            ) : (
-              <p className="rounded-xl bg-muted px-3 py-3 text-sm text-muted-foreground">{t("noMatch")}</p>
-            )}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => setAddOpen(true)}
-              className="rounded-xl bg-primary px-4 py-3.5 font-bold text-primary-foreground shadow-sm hover:bg-primary-hover"
-            >
-              ➕ {t("registerCustomer")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setRegistryOpen(true)}
-              className="rounded-xl bg-ink px-4 py-3.5 font-bold text-ink-foreground shadow-sm hover:bg-ink-3"
-            >
-              👥 {t("viewAll")} ({counts.pending}/{counts.total})
-            </button>
-            <button
-              type="button"
-              onClick={() => setResetOpen(true)}
-              className="rounded-xl border-2 border-warning-border bg-warning-soft px-4 py-3.5 font-bold text-warning-strong hover:bg-warning-mid"
-            >
-              🔄 {t("resetMonth")}
-            </button>
-          </div>
-        </section>
       </main>
 
       <AddCustomerDialog

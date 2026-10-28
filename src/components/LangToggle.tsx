@@ -10,7 +10,7 @@ export function LangToggle({ dark = false }: { dark?: boolean }) {
       onClick={() => setLang(value)}
       aria-pressed={lang === value}
       className={cn(
-        "rounded-md px-2.5 py-1",
+        "rounded-md px-2 py-1 sm:px-2.5",
         lang === value
           ? "bg-primary text-primary-foreground"
           : dark
@@ -23,7 +23,7 @@ export function LangToggle({ dark = false }: { dark?: boolean }) {
   );
   return (
     <div
-      className={cn("inline-flex rounded-lg p-1 text-sm font-semibold", dark ? "bg-ink-2" : "bg-border")}
+      className={cn("inline-flex rounded-lg p-0.5 text-sm font-semibold sm:p-1", dark ? "bg-ink-2" : "bg-border")}
       role="group"
       aria-label="Language"
     >
@@ -54,7 +54,7 @@ export function ThemeToggle() {
       aria-pressed={dark}
       aria-label={t("themeToggle")}
       title={t("themeToggle")}
-      className="rounded-lg bg-ink-2 px-2.5 py-1.5 text-sm text-ink-foreground hover:bg-ink-3"
+      className="rounded-lg bg-ink-2 px-2 py-1.5 text-sm text-ink-foreground hover:bg-ink-3 sm:px-2.5"
     >
       {dark ? "☀️" : "🌙"}
     </button>
