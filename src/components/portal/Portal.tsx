@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
 import { AppHeader } from "@/components/AppHeader";
 import { statusIcon, statusLabelKey } from "@/components/dashboard/parts";
-import { CROWD, STOCK_ITEMS, formatTime, parseStatus, parseStock, type CrowdLevel, type ShopStatus } from "@/lib/ration";
+import { CROWD, STOCK_ITEMS, parseStatus, parseStock, type CrowdLevel, type ShopStatus } from "@/lib/ration";
 import { myCardQuery, resolveHome, shopByIdQuery, type Customer } from "@/lib/shop-data";
 import { cn } from "@/lib/utils";
 
@@ -109,14 +109,6 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
           const avail = STOCK_ITEMS.filter((s) => parseStock(next.stock)[s.key]).map((s) => (lang === "ta" ? s.ta : s.en));
           notifyRef.current(`📦 ${t("nStock")}`, `${t("inStock")}: ${avail.join(", ") || "—"}`);
         }
-        if (
-          prev.morning_open !== next.morning_open ||
-          prev.morning_close !== next.morning_close ||
-          prev.evening_open !== next.evening_open ||
-          prev.evening_close !== next.evening_close
-        ) {
-          notifyRef.current(`🕘 ${t("nTimings")}`);
-        }
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "customers", filter: `id=eq.${card.id}` }, (payload) => {
         const next = payload.new as Customer;
@@ -176,15 +168,6 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
           )}
         </section>
 
-        {shop && (
-          <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
-            <h2 className="mb-2.5 text-base font-bold">🕘 {t("timings")}</h2>
-            <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
-              <TimingCard icon="☀️" label={t("morningShift")} from={formatTime(shop.morning_open, lang)} to={formatTime(shop.morning_close, lang)} />
-              <TimingCard icon="🌇" label={t("eveningShift")} from={formatTime(shop.evening_open, lang)} to={formatTime(shop.evening_close, lang)} />
-            </div>
-          </section>
-        )}
 
         <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
           <h2 className="mb-2.5 text-base font-bold">📦 {t("stock")}</h2>
@@ -261,19 +244,6 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
           </section>
         )}
       </main>
-    </div>
-  );
-}
-
-function TimingCard({ icon, label, from, to }: { icon: string; label: string; from: string; to: string }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-xl bg-muted px-3 py-2.5 ring-1 ring-border sm:flex-col sm:items-start">
-      <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        <span aria-hidden="true">{icon}</span> {label}
-      </p>
-      <p className="whitespace-nowrap text-base font-extrabold tabular-nums sm:text-lg">
-        {from} – {to}
-      </p>
     </div>
   );
 }

@@ -5,7 +5,7 @@ export type CrowdLevel = "low" | "medium" | "heavy";
 export type SmsType = "morning" | "evening";
 export type ShopStatus = "open" | "lunch" | "closed";
 export const SHOP_STATUSES: ShopStatus[] = ["open", "lunch", "closed"];
-export type StockKey = "rice" | "sugar" | "oil" | "wheat" | "kerosene";
+export type StockKey = "rice" | "sugar" | "oil" | "dal" | "wheat" | "kerosene";
 export type StockState = Record<StockKey, boolean>;
 
 export const DISTRICTS = [
@@ -20,11 +20,12 @@ export const STOCK_ITEMS: { key: StockKey; en: string; ta: string; icon: string 
   { key: "rice", en: "Rice", ta: "அரிசி", icon: "🍚" },
   { key: "sugar", en: "Sugar", ta: "சர்க்கரை", icon: "🧂" },
   { key: "oil", en: "Oil", ta: "எண்ணெய்", icon: "🫙" },
+  { key: "dal", en: "Paruppu (Toor Dal)", ta: "பருப்பு", icon: "🫘" },
   { key: "wheat", en: "Wheat", ta: "கோதுமை", icon: "🌾" },
   { key: "kerosene", en: "Kerosene", ta: "மண்ணெண்ணெய்", icon: "🛢️" },
 ];
 
-export const DEFAULT_STOCK: StockState = { rice: true, sugar: true, oil: true, wheat: false, kerosene: false };
+export const DEFAULT_STOCK: StockState = { rice: true, sugar: true, oil: true, dal: true, wheat: false, kerosene: false };
 
 export const CROWD: Record<CrowdLevel, { en: string; ta: string }> = {
   low: { en: "Low", ta: "குறைவு" },
