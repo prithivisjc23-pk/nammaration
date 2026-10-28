@@ -15,6 +15,13 @@
       "when": 1793199248693,
       "tag": "0001_dual_role_portal",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793199275461,
+      "tag": "0002_customers_protect_user_id_role_check",
+      "breakpoints": true
     }
   ]
 }
