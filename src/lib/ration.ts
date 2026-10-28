@@ -34,7 +34,7 @@ export const monthKey = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 export const monthLabel = (key: string, lang: Lang) => {
-  const [y, m] = key.split("-").map(Number);
+  const [y = 1970, m = 1] = key.split("-").map(Number);
   return new Date(y, m - 1, 1).toLocaleDateString(lang === "ta" ? "ta-IN" : "en-IN", {
     month: "long",
     year: "numeric",

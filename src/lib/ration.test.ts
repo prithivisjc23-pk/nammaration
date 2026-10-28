@@ -61,7 +61,7 @@ describe("counters and search", () => {
     expect(searchCustomers(list, "500001").map((x) => x.name)).toEqual(["Ravi"]);
   });
   it("lists pending customers before collected ones", () => {
-    expect(sortRegistry([list[1], list[0]]).map((x) => x.name)).toEqual(["Ravi", "Anbu"]);
+    expect(sortRegistry([...list].reverse()).map((x) => x.name)).toEqual(["Ravi", "Anbu"]);
   });
 });
 

@@ -135,7 +135,10 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
       .update({ status: "pending", collected_at: null })
       .eq("shop_id", shop.id)
       .eq("status", "collected");
-    if (error) return toast.error(t("tError"));
+    if (error) {
+      toast.error(t("tError"));
+      return;
+    }
     await updateShop({ cycle: monthKey() });
     await qc.invalidateQueries({ queryKey: custKey });
     setResetOpen(false);
