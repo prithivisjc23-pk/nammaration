@@ -291,10 +291,13 @@ export function ErrorText({ msg }: { msg: string | null }) {
 }
 
 export function SubmitButton({ busy, children }: { busy: boolean; children: ReactNode }) {
+  // Disabled until hydrated so a fast tap can't natively submit the form (and put the password in the URL).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <button
       type="submit"
-      disabled={busy}
+      disabled={busy || !mounted}
       className="rounded-xl bg-primary py-3.5 text-base font-bold text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
     >
       {busy ? "…" : children}
