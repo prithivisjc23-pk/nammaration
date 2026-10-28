@@ -79,10 +79,10 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
   }, []);
 
   notifyRef.current = (title: string, body?: string) => {
-    toast(title, { description: body });
+    toast(title, body ? { description: body } : undefined);
     try {
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification(title, { body, icon: "/icon.svg", tag: "namma-ration" });
+        new Notification(title, { body: body ?? "", icon: "/icon.svg", tag: "namma-ration" });
       }
     } catch {
       /* some mobile browsers only allow notifications from a service worker */
