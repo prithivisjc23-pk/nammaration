@@ -14,13 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      customers: {
+        Row: {
+          card: string
+          card_norm: string
+          collected_at: string | null
+          created_at: string
+          id: string
+          mobile: string
+          name: string
+          shop_id: string
+          status: string
+        }
+        Insert: {
+          card: string
+          card_norm: string
+          collected_at?: string | null
+          created_at?: string
+          id?: string
+          mobile: string
+          name: string
+          shop_id: string
+          status?: string
+        }
+        Update: {
+          card?: string
+          card_norm?: string
+          collected_at?: string | null
+          created_at?: string
+          id?: string
+          mobile?: string
+          name?: string
+          shop_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shops: {
+        Row: {
+          created_at: string
+          crowd: string
+          cycle: string
+          district: string
+          id: string
+          is_open: boolean
+          owner_id: string
+          shop_number: string
+          stock: Json
+          taluk: string
+          updated_at: string
+          username: string
+          ward: string
+        }
+        Insert: {
+          created_at?: string
+          crowd?: string
+          cycle?: string
+          district: string
+          id?: string
+          is_open?: boolean
+          owner_id: string
+          shop_number: string
+          stock?: Json
+          taluk: string
+          updated_at?: string
+          username: string
+          ward: string
+        }
+        Update: {
+          created_at?: string
+          crowd?: string
+          cycle?: string
+          district?: string
+          id?: string
+          is_open?: boolean
+          owner_id?: string
+          shop_number?: string
+          stock?: Json
+          taluk?: string
+          updated_at?: string
+          username?: string
+          ward?: string
+        }
+        Relationships: []
+      }
+      sms_logs: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          recipient_count: number
+          recipient_ids: string[]
+          shop_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          recipient_count: number
+          recipient_ids?: string[]
+          shop_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          recipient_count?: number
+          recipient_ids?: string[]
+          shop_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_shop_registration: {
+        Args: { _shop_number: string; _username: string }
+        Returns: Json
+      }
+      owns_shop: { Args: { _shop_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
