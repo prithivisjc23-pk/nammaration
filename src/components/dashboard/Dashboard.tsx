@@ -270,7 +270,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
             <div className="min-w-0">
               <p className="truncate text-base font-extrabold leading-tight">{shop.shop_name || t("appName")}</p>
               <p className="truncate text-xs text-ink-muted">
-                {t("shop")} #{shop.shop_number} · {shop.district} · {shop.taluk}
+                {[`${t("shop")} #${shop.shop_number}`, shop.district, shop.taluk].filter(Boolean).join(" · ")}
               </p>
             </div>
           </div>
@@ -294,8 +294,8 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
             📅 <time dateTime={new Date().toISOString().slice(0, 10)}>{today}</time>
           </p>
           <p className="text-xs font-medium text-muted-foreground">
-            {t("cycle")}: <span className="font-bold text-secondary-foreground">{monthLabel(shop.cycle, lang)}</span> ·{" "}
-            {shop.ward}
+            {t("cycle")}: <span className="font-bold text-secondary-foreground">{monthLabel(shop.cycle, lang)}</span>
+            {shop.ward ? ` · ${shop.ward}` : ""}
           </p>
         </div>
 
