@@ -45,6 +45,7 @@ const SHOP_ERRORS: Record<ShopkeeperRegisterError, I18nKey> = {
   invalid: "eRequired",
   shop_taken: "eShopExists",
   username_taken: "eUserExists",
+  weak_password: "ePassWeak",
   failed: "eGeneric",
 };
 

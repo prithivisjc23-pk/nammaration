@@ -93,7 +93,7 @@ const registerInput = z.object({
   password: z.string().min(6).max(200),
 });
 
-export type ShopkeeperRegisterError = "invalid" | "shop_taken" | "username_taken" | "failed";
+export type ShopkeeperRegisterError = "invalid" | "shop_taken" | "username_taken" | "weak_password" | "failed";
 export type ShopkeeperRegisterResult = { ok: true } | { ok: false; error: ShopkeeperRegisterError };
 
 /**
@@ -141,6 +141,9 @@ export const registerShopkeeper = createServerFn({ method: "POST" })
       },
     });
     if (error) {
+      if (error.code === "weak_password" || /weak|easy to guess/i.test(error.message ?? "")) {
+        return { ok: false, error: "weak_password" };
+      }
       const exists = /already/i.test(error.message ?? "");
       if (!exists) console.error("Shopkeeper account creation failed", error.message);
       return { ok: false, error: exists ? "shop_taken" : "failed" };
