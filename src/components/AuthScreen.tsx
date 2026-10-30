@@ -7,17 +7,16 @@ import { useLang } from "@/hooks/use-lang";
 import { BrandMark, LangToggle, ThemeToggle } from "@/components/LangToggle";
 import { registerShopkeeper, signInShopkeeper, type ShopkeeperRegisterError } from "@/lib/auth.functions";
 import { registerCardholder, type CardholderRegisterError } from "@/lib/cardholder.functions";
-import { publicShopsQuery, resolveHome } from "@/lib/shop-data";
+import { districtShopsQuery, resolveHome, shopIdPreviewQuery } from "@/lib/shop-data";
+import { toast } from "sonner";
 import {
   DISTRICTS,
   cardholderEmail,
   isValidCard,
   isValidMobile,
-  isValidShopNumber,
   isValidUsername,
   normalizeCard,
   normalizeMobile,
-  normalizeShopNumber,
 } from "@/lib/ration";
 import type { I18nKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -43,7 +42,6 @@ const CARD_ERRORS: Record<CardholderRegisterError, I18nKey> = {
 
 const SHOP_ERRORS: Record<ShopkeeperRegisterError, I18nKey> = {
   invalid: "eRequired",
-  shop_taken: "eShopExists",
   username_taken: "eUserExists",
   weak_password: "ePassWeak",
   failed: "eGeneric",
@@ -57,6 +55,8 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<{ title?: string; body: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [shopDistrict, setShopDistrict] = useState("");
+  const shopIdQ = useQuery(shopIdPreviewQuery(shopDistrict));
   const login = useServerFn(signInShopkeeper);
   const registerCard = useServerFn(registerCardholder);
   const registerShop = useServerFn(registerShopkeeper);
@@ -124,15 +124,13 @@ export function AuthScreen() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const shopName = String(f.get("shopName") ?? "").trim().replace(/\s+/g, " ");
-    const shopNumber = normalizeShopNumber(String(f.get("shopId") ?? ""));
     const district = String(f.get("district") ?? "");
     const taluk = String(f.get("taluk") ?? "").trim();
     const ward = String(f.get("ward") ?? "").trim();
     const mobile = normalizeMobile(String(f.get("mobile") ?? ""));
     const username = String(f.get("username") ?? "").trim();
     const password = String(f.get("password") ?? "");
-    if (!shopName || !shopNumber || !district || !mobile || !username || !password) return setError(t("eRequired"));
-    if (!isValidShopNumber(shopNumber)) return setError(t("eShopNo"));
+    if (!shopName || !district || !mobile || !username || !password) return setError(t("eRequired"));
     if (!(DISTRICTS as readonly string[]).includes(district)) return setError(t("eRequired"));
     if (!isValidMobile(mobile)) return setError(t("eMobile"));
     if (!isValidUsername(username)) return setError(t("eUsername"));
@@ -142,9 +140,11 @@ export function AuthScreen() {
     setError(null);
     try {
       const res = await registerShop({
-        data: { shopName: shopName.slice(0, 80), shopNumber, district, taluk, ward, mobile, username, password },
+        data: { shopName: shopName.slice(0, 80), district, taluk, ward, mobile, username, password },
       });
       if (!res.ok) return setError(t(SHOP_ERRORS[res.error]));
+      const shopNumber = res.shopNumber;
+      toast.success(t("tShopCreated", shopNumber), { duration: 10000 });
       // Account is created ready to use — sign straight in.
       const session = await login({ data: { identifier: shopNumber, password } });
       if (!session.ok) {
@@ -262,7 +262,7 @@ export function AuthScreen() {
       {role === "shop" && tab === "login" && (
         <form onSubmit={handleShopLogin} className="flex flex-col gap-4" noValidate>
           <Field label={t("loginId")}>
-            <input name="loginId" required autoComplete="username" className={inputCls} placeholder="shop1234 / FPS-104" />
+            <input name="loginId" required autoComplete="username" className={inputCls} placeholder="TRIC-1" />
           </Field>
           <Field label={t("password")}>
             <input name="password" type="password" required autoComplete="current-password" className={inputCls} />
@@ -284,11 +284,17 @@ export function AuthScreen() {
           <Field label={t("shopName")}>
             <input name="shopName" required maxLength={80} autoComplete="organization" className={inputCls} />
           </Field>
-          <Field label={t("shopCode")}>
-            <input name="shopId" required autoComplete="off" className={cn(inputCls, "uppercase")} placeholder="FPS-104" />
-          </Field>
           <Field label={t("area")}>
-            <DistrictSelect />
+            <DistrictSelect value={shopDistrict} onChange={setShopDistrict} />
+          </Field>
+          <Field label={t("shopIdAuto")}>
+            <div
+              className={cn(inputCls, "bg-muted font-mono font-bold tracking-wider", !shopDistrict && "font-sans font-normal tracking-normal text-muted-foreground")}
+              aria-live="polite"
+            >
+              {!shopDistrict ? t("shopIdPick") : shopIdQ.data?.shopId ?? "…"}
+            </div>
+            {shopDistrict && shopIdQ.data?.shopId && <span className="text-xs text-muted-foreground">{t("shopIdNote")}</span>}
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label={t("talukOpt")}>
@@ -369,8 +375,13 @@ function CardRegisterForm({
 }) {
   const { t } = useLang();
   const [district, setDistrict] = useState("");
-  const shopsQ = useQuery(publicShopsQuery());
-  const shops = (shopsQ.data ?? []).filter((s) => s.district === district);
+  const [search, setSearch] = useState("");
+  const shopsQ = useQuery(districtShopsQuery(district));
+  const allShops = shopsQ.data ?? [];
+  const q = search.trim().toLowerCase();
+  const shops = q
+    ? allShops.filter((s) => s.shop_number.toLowerCase().includes(q) || s.shop_name.toLowerCase().includes(q))
+    : allShops;
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -400,19 +411,39 @@ function CardRegisterForm({
         <input name="name" required maxLength={60} autoComplete="name" className={inputCls} />
       </Field>
       <Field label={t("area")}>
-        <DistrictSelect value={district} onChange={setDistrict} />
+        <DistrictSelect
+          value={district}
+          onChange={(v) => {
+            setDistrict(v);
+            setSearch("");
+          }}
+        />
       </Field>
       <Field label={t("selectShop")}>
-        <select name="shopCode" required className={inputCls} defaultValue="" key={district} disabled={!district}>
-          <option value="">{t("selectShop")}</option>
+        {allShops.length > 8 && (
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("searchShop")}
+            aria-label={t("searchShop")}
+            className={cn(inputCls, "py-2.5")}
+          />
+        )}
+        <select name="shopCode" required className={inputCls} defaultValue="" key={`${district}|${q}`} disabled={!district}>
+          <option value="">{district ? t("selectShop") : t("pickDistrictFirst")}</option>
           {shops.map((s) => (
             <option key={s.shop_number} value={s.shop_number}>
               {s.shop_number}
               {s.shop_name ? ` — ${s.shop_name}` : ""}
+              {s.ward || s.taluk ? ` (${s.ward || s.taluk})` : ""}
             </option>
           ))}
         </select>
-        {district && shopsQ.isSuccess && !shops.length && (
+        {district && shopsQ.isSuccess && allShops.length > 0 && !shops.length && (
+          <span className="text-xs text-warning-strong">{t("noShopMatch")}</span>
+        )}
+        {district && shopsQ.isSuccess && !allShops.length && (
           <span className="text-xs text-warning-strong">{t("noShopsInDistrict")}</span>
         )}
       </Field>
