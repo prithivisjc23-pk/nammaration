@@ -13,7 +13,7 @@
 
 - Pure business rules (validation, SMS lock, message text, search, counters) live in `src/lib/ration.ts` with tests in `src/lib/ration.test.ts`; UI imports them so rules stay testable.
 - All UI text goes through `src/lib/i18n.ts` (en + ta) via `useLang()`; never hardcode user-facing strings in one language.
-- Shopkeeper sign-in resolves username / shop number → email inside the `signInShopkeeper` server function so emails are never exposed to the browser.
+- Shopkeepers register without email: `registerShopkeeper` creates a confirmed account on a synthetic address (`shopkeeperEmail`, from the shop code); sign-in resolves username / shop number → account email inside `signInShopkeeper` so addresses never reach the browser. Older email-registered shops keep email login and reset.
 - A shop row is created by the `handle_new_shopkeeper` trigger from sign-up metadata; uniqueness is pre-checked with the `check_shop_registration` RPC.
 - Two roles derived from data, not a roles table: a shop owner (`shops.owner_id`) uses /dashboard, a cardholder (`customers.user_id`) uses /portal; `resolveHome` routes after sign-in.
 - RLS: shop owners see their shop, customers and SMS history (`owns_shop`); cardholders see only their own card row and their shop (`is_shop_customer`). `customers.user_id` can only be set by service-role code (trigger), so owners cannot grant portal access.

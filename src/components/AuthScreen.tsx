@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
 import { BrandMark, LangToggle, ThemeToggle } from "@/components/LangToggle";
-import { signInShopkeeper } from "@/lib/auth.functions";
+import { registerShopkeeper, signInShopkeeper, type ShopkeeperRegisterError } from "@/lib/auth.functions";
 import { registerCardholder, type CardholderRegisterError } from "@/lib/cardholder.functions";
 import { publicShopsQuery, resolveHome } from "@/lib/shop-data";
 import {
@@ -41,6 +41,14 @@ const CARD_ERRORS: Record<CardholderRegisterError, I18nKey> = {
   failed: "eGeneric",
 };
 
+const SHOP_ERRORS: Record<ShopkeeperRegisterError, I18nKey> = {
+  invalid: "eRequired",
+  shop_taken: "eShopExists",
+  username_taken: "eUserExists",
+  weak_password: "ePassWeak",
+  failed: "eGeneric",
+};
+
 export function AuthScreen() {
   const { t } = useLang();
   const navigate = useNavigate();
@@ -51,6 +59,7 @@ export function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const login = useServerFn(signInShopkeeper);
   const registerCard = useServerFn(registerCardholder);
+  const registerShop = useServerFn(registerShopkeeper);
 
   const goHome = async (userId: string) => {
     const home = await resolveHome(userId);
@@ -121,41 +130,32 @@ export function AuthScreen() {
     const ward = String(f.get("ward") ?? "").trim();
     const mobile = normalizeMobile(String(f.get("mobile") ?? ""));
     const username = String(f.get("username") ?? "").trim();
-    const email = String(f.get("email") ?? "").trim().toLowerCase();
     const password = String(f.get("password") ?? "");
-    if (!shopName || !shopNumber || !district || !mobile || !username || !email || !password) return setError(t("eRequired"));
+    if (!shopName || !shopNumber || !district || !mobile || !username || !password) return setError(t("eRequired"));
     if (!isValidShopNumber(shopNumber)) return setError(t("eShopNo"));
     if (!(DISTRICTS as readonly string[]).includes(district)) return setError(t("eRequired"));
     if (!isValidMobile(mobile)) return setError(t("eMobile"));
     if (!isValidUsername(username)) return setError(t("eUsername"));
-    if (!EMAIL_RE.test(email)) return setError(t("eEmail"));
     if (password.length < 6) return setError(t("ePass"));
 
     setBusy(true);
     setError(null);
     try {
-      const { data: avail, error: availError } = await supabase.rpc("check_shop_registration", {
-        _shop_number: shopNumber,
-        _username: username,
+      const res = await registerShop({
+        data: { shopName: shopName.slice(0, 80), shopNumber, district, taluk, ward, mobile, username, password },
       });
-      if (availError) return setError(t("eGeneric"));
-      const a = (avail ?? {}) as { shop_taken?: boolean; username_taken?: boolean };
-      if (a.shop_taken) return setError(t("eShopExists"));
-      if (a.username_taken) return setError(t("eUserExists"));
-
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: { shop_number: shopNumber, shop_name: shopName.slice(0, 80), district, taluk, ward, mobile, username },
-        },
+      if (!res.ok) return setError(t(SHOP_ERRORS[res.error]));
+      // Account is created ready to use — sign straight in.
+      const session = await login({ data: { identifier: shopNumber, password } });
+      if (!session.ok) {
+        setTab("login");
+        return setError(t("eGeneric"));
+      }
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
       });
-      // Auth errors (weak password, blocked email domain, rate limit) are already human-readable.
-      if (signUpError) return setError(signUpError.message || t("eGeneric"));
-      if (data.session) return;
-      setInfo({ title: t("checkEmailTitle"), body: t("checkEmail", email) });
-      setTab("login");
+      if (sessionError) setError(t("eGeneric"));
     } catch {
       setError(t("eGeneric"));
     } finally {
@@ -303,9 +303,6 @@ export function AuthScreen() {
           </Field>
           <Field label={t("username")}>
             <input name="username" required autoComplete="username" className={inputCls} />
-          </Field>
-          <Field label={t("email")} hint={t("emailHint")}>
-            <input name="email" type="email" required autoComplete="email" className={inputCls} />
           </Field>
           <Field label={t("password")}>
             <input name="password" type="password" required minLength={6} autoComplete="new-password" className={inputCls} />

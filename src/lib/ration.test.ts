@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSmsMessage,
   cardholderEmail,
+  shopkeeperEmail,
   formatTime,
   isValidTimings,
   countCustomers,
@@ -48,6 +49,13 @@ describe("shop timings", () => {
 describe("cardholder sign-in", () => {
   it("derives the same sign-in address from any spelling of the card number", () => {
     expect(cardholderEmail("33/g/0123456")).toBe(cardholderEmail("33G 0123456"));
+  });
+});
+
+describe("shopkeeper registration without email", () => {
+  it("derives one internal sign-in address per shop code, whatever the spelling", () => {
+    expect(shopkeeperEmail("fps-104")).toBe("shop-fps-104@shop.nammaration.app");
+    expect(shopkeeperEmail(" FPS-104 ")).toBe(shopkeeperEmail("fps-104"));
   });
 });
 
