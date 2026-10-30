@@ -69,6 +69,10 @@ export const isSmsLocked = (type: SmsType, status: ShopStatus) =>
 export const parseStatus = (s: string): ShopStatus => (s === "lunch" || s === "closed" ? s : "open");
 
 /** Synthetic sign-in address for cardholders, who log in with their Smart Card number. */
+/** Internal sign-in address for a shop; shopkeepers never see or type it. */
+export const shopkeeperEmail = (shopNumber: string) =>
+  `shop-${normalizeShopNumber(shopNumber).toLowerCase()}@shop.nammaration.app`;
+
 export const cardholderEmail = (card: string) => `card-${normCard(card).toLowerCase()}@cardholder.nammaration.app`;
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
