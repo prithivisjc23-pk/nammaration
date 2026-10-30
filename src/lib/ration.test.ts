@@ -14,6 +14,10 @@ import {
   searchCustomers,
   sortRegistry,
   DEFAULT_STOCK,
+  DISTRICTS,
+  DISTRICT_CODES,
+  compareShopIds,
+  nextShopId,
 } from "./ration";
 
 const c = (name: string, card: string, mobile: string, status = "pending") => ({ name, card, mobile, status });
@@ -56,6 +60,29 @@ describe("shopkeeper registration without email", () => {
   it("derives one internal sign-in address per shop code, whatever the spelling", () => {
     expect(shopkeeperEmail("fps-104")).toBe("shop-fps-104@shop.nammaration.app");
     expect(shopkeeperEmail(" FPS-104 ")).toBe(shopkeeperEmail("fps-104"));
+  });
+});
+
+describe("automatic Shop ID", () => {
+  it("uses a 4-letter district prefix: TRIC for Trichy, TIRU for Tirunelveli", () => {
+    expect(DISTRICT_CODES.Tiruchirappalli).toBe("TRIC");
+    expect(DISTRICT_CODES.Tirunelveli).toBe("TIRU");
+  });
+  it("gives every Tamil Nadu district its own 4-letter prefix", () => {
+    const codes = DISTRICTS.map((d) => DISTRICT_CODES[d]);
+    expect(new Set(codes).size).toBe(DISTRICTS.length);
+    expect(codes.every((c) => /^[A-Z]{4}$/.test(c))).toBe(true);
+  });
+  it("starts at 1 and counts up per district", () => {
+    expect(nextShopId("Tiruchirappalli", [])).toBe("TRIC-1");
+    expect(nextShopId("Tiruchirappalli", ["TRIC-1", "TRIC-2", "TIRU-7"])).toBe("TRIC-3");
+    expect(nextShopId("Tirunelveli", ["TRIC-1", "TRIC-2"])).toBe("TIRU-1");
+  });
+  it("never reuses a number even if an earlier one is missing", () => {
+    expect(nextShopId("Madurai", ["MADU-1", "MADU-9"])).toBe("MADU-10");
+  });
+  it("orders TRIC-2 before TRIC-10", () => {
+    expect(["TRIC-10", "TRIC-2", "TRIC-1"].sort(compareShopIds)).toEqual(["TRIC-1", "TRIC-2", "TRIC-10"]);
   });
 });
 

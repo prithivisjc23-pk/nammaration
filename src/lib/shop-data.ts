@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { listDistrictShops, previewShopId } from "./shops.functions";
 
 export type Shop = Tables<"shops">;
 export type Customer = Tables<"customers">;
@@ -91,14 +92,20 @@ export const shopByIdQuery = (shopId: string) =>
     },
   });
 
-export type PublicShop = { shop_number: string; shop_name: string; district: string };
-
-export const publicShopsQuery = () =>
+/** Shops in one district for the cardholder sign-up picker. */
+export const districtShopsQuery = (district: string) =>
   queryOptions({
-    queryKey: ["public_shops"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("list_shops_public");
-      if (error) throw error;
-      return (data ?? []) as PublicShop[];
-    },
+    queryKey: ["district_shops", district],
+    queryFn: () => listDistrictShops({ data: { district } }),
+    enabled: !!district,
+    staleTime: 60_000,
+  });
+
+/** The Shop ID a new shop in this district will get. */
+export const shopIdPreviewQuery = (district: string) =>
+  queryOptions({
+    queryKey: ["shop_id_preview", district],
+    queryFn: () => previewShopId({ data: { district } }),
+    enabled: !!district,
+    staleTime: 10_000,
   });

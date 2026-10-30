@@ -3,10 +3,10 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import {
-  DISTRICTS,
+  isDistrict,
   isValidMobile,
-  isValidShopNumber,
   isValidUsername,
+  nextShopId,
   normalizeMobile,
   normalizeShopNumber,
   shopkeeperEmail,
@@ -84,7 +84,6 @@ export const signInShopkeeper = createServerFn({ method: "POST" })
 
 const registerInput = z.object({
   shopName: z.string().trim().min(1).max(80),
-  shopNumber: z.string().max(20),
   district: z.string().max(40),
   taluk: z.string().trim().max(60),
   ward: z.string().trim().max(60),
@@ -93,60 +92,59 @@ const registerInput = z.object({
   password: z.string().min(6).max(200),
 });
 
-export type ShopkeeperRegisterError = "invalid" | "shop_taken" | "username_taken" | "weak_password" | "failed";
-export type ShopkeeperRegisterResult = { ok: true } | { ok: false; error: ShopkeeperRegisterError };
+export type ShopkeeperRegisterError = "invalid" | "username_taken" | "weak_password" | "failed";
+export type ShopkeeperRegisterResult = { ok: true; shopNumber: string } | { ok: false; error: ShopkeeperRegisterError };
 
 /**
  * Public: create a shopkeeper account without an email address.
- * The account uses an internal address derived from the shop code and is created already confirmed;
- * the `handle_new_shopkeeper` trigger creates the shop row from the metadata.
+ * The Shop ID is generated here from the district (e.g. TRIC-3); the account uses an internal address
+ * derived from it and is created already confirmed; `handle_new_shopkeeper` creates the shop row.
  */
 export const registerShopkeeper = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => registerInput.parse(input))
   .handler(async ({ data }): Promise<ShopkeeperRegisterResult> => {
-    const shopNumber = normalizeShopNumber(data.shopNumber);
     const mobile = normalizeMobile(data.mobile);
     const username = data.username;
-    if (
-      !isValidShopNumber(shopNumber) ||
-      !isValidMobile(mobile) ||
-      !isValidUsername(username) ||
-      !(DISTRICTS as readonly string[]).includes(data.district)
-    ) {
+    if (!isValidMobile(mobile) || !isValidUsername(username) || !isDistrict(data.district)) {
       return { ok: false, error: "invalid" };
     }
-
+    const district = data.district;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: avail, error: availError } = await supabaseAdmin.rpc("check_shop_registration", {
-      _shop_number: shopNumber,
-      _username: username,
-    });
-    if (availError) return { ok: false, error: "failed" };
-    const a = (avail ?? {}) as { shop_taken?: boolean; username_taken?: boolean };
-    if (a.shop_taken) return { ok: false, error: "shop_taken" };
-    if (a.username_taken) return { ok: false, error: "username_taken" };
+    const { takenShopIds } = await import("./shops.server");
 
-    const { error } = await supabaseAdmin.auth.admin.createUser({
-      email: shopkeeperEmail(shopNumber),
-      password: data.password,
-      email_confirm: true,
-      user_metadata: {
-        shop_number: shopNumber,
-        shop_name: data.shopName.replace(/\s+/g, " "),
-        district: data.district,
-        taluk: data.taluk,
-        ward: data.ward,
-        mobile,
-        username,
-      },
-    });
-    if (error) {
+    // Two shops registering at the same moment can pick the same next number; retry with the following one.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const shopNumber = nextShopId(district, await takenShopIds(district));
+      const { data: avail, error: availError } = await supabaseAdmin.rpc("check_shop_registration", {
+        _shop_number: shopNumber,
+        _username: username,
+      });
+      if (availError) return { ok: false, error: "failed" };
+      const a = (avail ?? {}) as { shop_taken?: boolean; username_taken?: boolean };
+      if (a.username_taken) return { ok: false, error: "username_taken" };
+      if (a.shop_taken) continue;
+
+      const { error } = await supabaseAdmin.auth.admin.createUser({
+        email: shopkeeperEmail(shopNumber),
+        password: data.password,
+        email_confirm: true,
+        user_metadata: {
+          shop_number: shopNumber,
+          shop_name: data.shopName.replace(/\s+/g, " "),
+          district,
+          taluk: data.taluk,
+          ward: data.ward,
+          mobile,
+          username,
+        },
+      });
+      if (!error) return { ok: true, shopNumber };
       if (error.code === "weak_password" || /weak|easy to guess/i.test(error.message ?? "")) {
         return { ok: false, error: "weak_password" };
       }
-      const exists = /already/i.test(error.message ?? "");
-      if (!exists) console.error("Shopkeeper account creation failed", error.message);
-      return { ok: false, error: exists ? "shop_taken" : "failed" };
+      if (/already/i.test(error.message ?? "")) continue;
+      console.error("Shopkeeper account creation failed", error.message);
+      return { ok: false, error: "failed" };
     }
-    return { ok: true };
+    return { ok: false, error: "failed" };
   });

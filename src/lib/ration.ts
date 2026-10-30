@@ -16,6 +16,39 @@ export const DISTRICTS = [
   "Tiruppur", "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar",
 ] as const;
 
+export type District = (typeof DISTRICTS)[number];
+
+/**
+ * 4-letter Shop ID prefix per district: the first 4 letters of the name, except where two districts
+ * would clash (Chennai / Chengalpattu, the six "Tiru…" districts) — those get a fixed distinct code.
+ */
+export const DISTRICT_CODES: Record<District, string> = {
+  Ariyalur: "ARIY", Chengalpattu: "CHGL", Chennai: "CHEN", Coimbatore: "COIM", Cuddalore: "CUDD",
+  Dharmapuri: "DHAR", Dindigul: "DIND", Erode: "EROD", Kallakurichi: "KALL", Kancheepuram: "KANC",
+  Kanniyakumari: "KANN", Karur: "KARU", Krishnagiri: "KRIS", Madurai: "MADU", Mayiladuthurai: "MAYI",
+  Nagapattinam: "NAGA", Namakkal: "NAMA", Nilgiris: "NILG", Perambalur: "PERA", Pudukkottai: "PUDU",
+  Ramanathapuram: "RAMA", Ranipet: "RANI", Salem: "SALE", Sivaganga: "SIVA", Tenkasi: "TENK",
+  Thanjavur: "THAN", Theni: "THEN", Thoothukudi: "THOO", Tiruchirappalli: "TRIC", Tirunelveli: "TIRU",
+  Tirupathur: "TPTR", Tiruppur: "TPUR", Tiruvallur: "TVLR", Tiruvannamalai: "TVMA", Tiruvarur: "TVRR",
+  Vellore: "VELL", Viluppuram: "VILU", Virudhunagar: "VIRU",
+};
+
+export const isDistrict = (d: string): d is District => (DISTRICTS as readonly string[]).includes(d);
+
+/** Next free Shop ID in a district (e.g. TRIC-3), given the Shop IDs already taken. */
+export function nextShopId(district: District, taken: readonly string[]) {
+  const code = DISTRICT_CODES[district];
+  const re = new RegExp(`^${code}-(\\d+)$`);
+  const max = taken.reduce((m, id) => {
+    const n = re.exec(id.toUpperCase())?.[1];
+    return n ? Math.max(m, Number(n)) : m;
+  }, 0);
+  return `${code}-${max + 1}`;
+}
+
+/** Sort Shop IDs so TRIC-2 comes before TRIC-10. */
+export const compareShopIds = (a: string, b: string) => a.localeCompare(b, "en", { numeric: true });
+
 export const STOCK_ITEMS: { key: StockKey; en: string; ta: string; icon: string }[] = [
   { key: "rice", en: "Rice", ta: "அரிசி", icon: "🍚" },
   { key: "sugar", en: "Sugar", ta: "சர்க்கரை", icon: "🧂" },
