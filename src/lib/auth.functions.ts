@@ -11,7 +11,6 @@ import {
   normalizeShopNumber,
   shopkeeperEmail,
 } from "./ration";
-import { takenShopIds } from "./shops.functions";
 
 const loginInput = z.object({
   identifier: z.string().trim().min(1).max(254),
@@ -111,6 +110,7 @@ export const registerShopkeeper = createServerFn({ method: "POST" })
     }
     const district = data.district;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { takenShopIds } = await import("./shops.server");
 
     // Two shops registering at the same moment can pick the same next number; retry with the following one.
     for (let attempt = 0; attempt < 5; attempt++) {
