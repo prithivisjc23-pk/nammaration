@@ -48,7 +48,7 @@ export function Portal({ userId }: { userId: string }) {
 
 function Centered({ children }: { children: ReactNode }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background px-4 text-center text-muted-foreground">
+    <main className="theme-card flex min-h-screen flex-col items-center justify-center gap-2 bg-background px-4 text-center text-muted-foreground">
       {children}
     </main>
   );
@@ -140,7 +140,7 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
     : "";
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="theme-card min-h-screen bg-background text-foreground">
       <AppHeader
         title={t("portalTitle")}
         subtitle={shop ? `${shop.shop_name || t("shop")} · #${shop.shop_number} · ${shop.district}` : "…"}
