@@ -3,7 +3,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
-import { AuthShell, ErrorText, Field, SubmitButton, inputCls } from "@/components/AuthScreen";
+import { AuthShell, ErrorText, NewPasswordFields, SubmitButton } from "@/components/AuthScreen";
+import { checkNewPassword } from "@/lib/ration";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -39,8 +40,10 @@ function ResetPassword() {
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const password = String(new FormData(e.currentTarget).get("password") ?? "");
-    if (password.length < 6) return setError(t("ePass"));
+    const f = new FormData(e.currentTarget);
+    const password = String(f.get("password") ?? "");
+    const pwIssue = checkNewPassword(password, String(f.get("confirm") ?? ""));
+    if (pwIssue) return setError(t(pwIssue === "short" ? "ePass" : "ePassMismatch"));
     setBusy(true);
     setError(null);
     const { error: err } = await supabase.auth.updateUser({ password });
@@ -55,9 +58,7 @@ function ResetPassword() {
       <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
         <h2 className="text-lg font-bold text-foreground">{t("forgotTitle")}</h2>
         {!ready && <p className="text-sm text-muted-foreground">{t("resetWaiting")}</p>}
-        <Field label={t("newPassword")}>
-          <input name="password" type="password" minLength={6} required autoComplete="new-password" className={inputCls} disabled={!ready} />
-        </Field>
+        <NewPasswordFields label={t("newPassword")} disabled={!ready} />
         <ErrorText msg={error} />
         <SubmitButton busy={busy || !ready}>{t("setPassword")}</SubmitButton>
       </form>

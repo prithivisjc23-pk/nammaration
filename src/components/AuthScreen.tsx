@@ -1,17 +1,20 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
-import { BrandMark, LangToggle, ThemeToggle } from "@/components/LangToggle";
+import { BrandMark, Elephant, LangToggle, ThemeToggle } from "@/components/LangToggle";
 import { registerShopkeeper, signInShopkeeper, type ShopkeeperRegisterError } from "@/lib/auth.functions";
 import { registerCardholder, type CardholderRegisterError } from "@/lib/cardholder.functions";
 import { districtShopsQuery, resolveHome, shopIdPreviewQuery } from "@/lib/shop-data";
 import { toast } from "sonner";
 import {
   DISTRICTS,
+  MIN_PASSWORD,
   cardholderEmail,
+  checkNewPassword,
   isValidCard,
   isValidMobile,
   isValidUsername,
@@ -130,11 +133,13 @@ export function AuthScreen() {
     const mobile = normalizeMobile(String(f.get("mobile") ?? ""));
     const username = String(f.get("username") ?? "").trim();
     const password = String(f.get("password") ?? "");
+    const confirm = String(f.get("confirm") ?? "");
     if (!shopName || !district || !mobile || !username || !password) return setError(t("eRequired"));
     if (!(DISTRICTS as readonly string[]).includes(district)) return setError(t("eRequired"));
     if (!isValidMobile(mobile)) return setError(t("eMobile"));
     if (!isValidUsername(username)) return setError(t("eUsername"));
-    if (password.length < 6) return setError(t("ePass"));
+    const pwIssue = checkNewPassword(password, confirm);
+    if (pwIssue) return setError(t(pwIssue === "short" ? "ePass" : "ePassMismatch"));
 
     setBusy(true);
     setError(null);
@@ -210,9 +215,10 @@ export function AuthScreen() {
   }
 
   return (
-    <AuthShell>
-      <div className="mb-4 grid grid-cols-2 gap-2" role="radiogroup" aria-label="Role">
-        {(["shop", "card"] as const).map((r) => (
+    <AuthShell tone={role}>
+      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("signInAs")}</p>
+      <div className="mb-4 grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("signInAs")}>
+        {(["card", "shop"] as const).map((r) => (
           <button
             key={r}
             type="button"
@@ -220,14 +226,17 @@ export function AuthScreen() {
             aria-checked={role === r}
             onClick={() => switchRole(r)}
             className={cn(
-              "flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 text-sm font-bold transition",
+              "flex flex-col items-start gap-0.5 rounded-xl border-2 px-3 py-2.5 text-left transition",
               role === r
-                ? "border-primary bg-primary-soft text-primary-strong"
+                ? "border-primary bg-primary-soft text-primary-strong shadow-sm"
                 : "border-border bg-muted text-muted-foreground hover:border-input",
             )}
           >
-            <span aria-hidden="true">{r === "shop" ? "🏪" : "🪪"}</span>
-            {t(r === "shop" ? "roleShop" : "roleCard")}
+            <span className="flex items-center gap-1.5 text-sm font-extrabold">
+              <span aria-hidden="true">{r === "shop" ? "🏪" : "🪪"}</span>
+              {t(r === "shop" ? "roleShop" : "roleCardHolder")}
+            </span>
+            <span className="text-xs font-medium leading-snug opacity-80">{t(r === "shop" ? "roleShopSub" : "roleCardSub")}</span>
           </button>
         ))}
       </div>
@@ -243,7 +252,7 @@ export function AuthScreen() {
               onClick={() => switchTab(k)}
               className={cn(
                 "rounded-lg py-2.5 text-sm font-bold",
-                tab === k ? "bg-card text-foreground shadow" : "text-muted-foreground",
+                tab === k ? "bg-highlight text-highlight-foreground shadow" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {t(k === "login" ? "login" : role === "shop" ? "registerShop" : "cardRegister")}
@@ -265,7 +274,7 @@ export function AuthScreen() {
             <input name="loginId" required autoComplete="username" className={inputCls} placeholder="TRIC-1" />
           </Field>
           <Field label={t("password")}>
-            <input name="password" type="password" required autoComplete="current-password" className={inputCls} />
+            <PasswordInput name="password" autoComplete="current-password" />
           </Field>
           <ErrorText msg={error} />
           <SubmitButton busy={busy}>{t("loginBtn")}</SubmitButton>
@@ -310,9 +319,7 @@ export function AuthScreen() {
           <Field label={t("username")}>
             <input name="username" required autoComplete="username" className={inputCls} />
           </Field>
-          <Field label={t("password")}>
-            <input name="password" type="password" required minLength={6} autoComplete="new-password" className={inputCls} />
-          </Field>
+          <NewPasswordFields />
           <ErrorText msg={error} />
           <SubmitButton busy={busy}>{t("createShop")}</SubmitButton>
         </form>
@@ -345,7 +352,7 @@ export function AuthScreen() {
             <input name="card" required autoComplete="username" className={cn(inputCls, "uppercase tracking-wide")} placeholder="33/G/0123456" />
           </Field>
           <Field label={t("password")}>
-            <input name="password" type="password" required autoComplete="current-password" className={inputCls} />
+            <PasswordInput name="password" autoComplete="current-password" />
           </Field>
           <ErrorText msg={error} />
           <SubmitButton busy={busy}>{t("cardLoginBtn")}</SubmitButton>
@@ -391,11 +398,13 @@ function CardRegisterForm({
     const name = String(f.get("name") ?? "").trim().replace(/\s+/g, " ");
     const shopCode = String(f.get("shopCode") ?? "");
     const password = String(f.get("password") ?? "");
+    const confirm = String(f.get("confirm") ?? "");
     if (!card || !mobile || !name || !district || !password) return setError(t("eRequired"));
     if (!isValidCard(card)) return setError(t("eCard"));
     if (!isValidMobile(mobile)) return setError(t("eMobile"));
     if (!shopCode) return setError(t("eShopCode"));
-    if (password.length < 6) return setError(t("ePass"));
+    const pwIssue = checkNewPassword(password, confirm);
+    if (pwIssue) return setError(t(pwIssue === "short" ? "ePass" : "ePassMismatch"));
     onSubmit({ card, mobile, name, district, shopCode, password });
   }
 
@@ -447,9 +456,7 @@ function CardRegisterForm({
           <span className="text-xs text-warning-strong">{t("noShopsInDistrict")}</span>
         )}
       </Field>
-      <Field label={t("password")}>
-        <input name="password" type="password" required minLength={6} autoComplete="new-password" className={inputCls} />
-      </Field>
+      <NewPasswordFields />
       <ErrorText msg={error} />
       <SubmitButton busy={busy}>{t("createCardAccount")}</SubmitButton>
     </form>
@@ -493,26 +500,33 @@ function MobileInput() {
   );
 }
 
-export function AuthShell({ children }: { children: ReactNode }) {
+export function AuthShell({ children, tone = "shop" }: { children: ReactNode; tone?: Role }) {
   const { t } = useLang();
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-ink px-4 py-10">
-      <div className="mb-6 flex w-full max-w-md items-center gap-3">
+    <main
+      className={cn(
+        "relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-ink px-4 py-10 transition-colors",
+        tone === "card" && "theme-card",
+      )}
+    >
+      <Elephant className="pointer-events-none absolute -bottom-10 -right-16 h-72 w-96 text-ink-foreground opacity-[0.06] sm:h-96 sm:w-[32rem]" />
+      <Elephant className="pointer-events-none absolute -left-20 top-6 h-40 w-56 -scale-x-100 text-ink-foreground opacity-[0.04]" />
+      <div className="relative mb-6 flex w-full max-w-md items-center gap-3">
         <BrandMark className="h-12 w-12" />
         <div>
           <h1 className="text-xl font-extrabold text-ink-foreground">
-            Namma Ration <span className="text-primary">|</span> நம்ம ரேஷன்
+            Namma Ration <span className="text-highlight">|</span> நம்ம ரேஷன்
           </h1>
-          <p className="text-sm text-ink-muted">{t("tagline")}</p>
+          <p className="text-sm text-ink-muted">{t(tone === "card" ? "taglineCard" : "tagline")}</p>
         </div>
       </div>
-      <div className="mb-4 flex w-full max-w-md justify-end gap-2">
+      <div className="relative mb-4 flex w-full max-w-md justify-end gap-2">
         <ThemeToggle />
         <LangToggle dark />
       </div>
-      <section className="w-full max-w-md rounded-2xl bg-card p-5 shadow-2xl sm:p-6">
+      <section className="relative w-full max-w-md rounded-2xl border-t-4 border-highlight bg-card p-5 shadow-2xl sm:p-6">
         {children}
-        <p className="mt-5 text-center text-xs text-muted-foreground">🔒 {t("authOnly")}</p>
+        <p className="mt-5 text-center text-xs text-muted-foreground">🔒 {t(tone === "card" ? "authOnlyCard" : "authOnly")}</p>
       </section>
     </main>
   );
@@ -549,6 +563,83 @@ export function SubmitButton({ busy, children }: { busy: boolean; children: Reac
     >
       {busy ? "…" : children}
     </button>
+  );
+}
+
+/** Password box with a Show / Hide toggle. */
+export function PasswordInput({
+  name,
+  autoComplete,
+  disabled,
+  value,
+  onChange,
+  id,
+}: {
+  name: string;
+  autoComplete: "current-password" | "new-password";
+  disabled?: boolean | undefined;
+  value?: string;
+  onChange?: (v: string) => void;
+  id?: string;
+}) {
+  const { t } = useLang();
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        name={name}
+        type={show ? "text" : "password"}
+        required
+        minLength={autoComplete === "new-password" ? MIN_PASSWORD : undefined}
+        autoComplete={autoComplete}
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        disabled={disabled}
+        className={cn(inputCls, "pr-12")}
+        {...(onChange ? { value, onChange: (e) => onChange(e.target.value) } : {})}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        disabled={disabled}
+        aria-label={t(show ? "hidePassword" : "showPassword")}
+        aria-pressed={show}
+        title={t(show ? "hidePassword" : "showPassword")}
+        className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-xl text-muted-foreground hover:text-foreground disabled:opacity-50"
+      >
+        {show ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
+      </button>
+    </div>
+  );
+}
+
+/** Password + Confirm Password pair with a live "match" hint. Field names: `password`, `confirm`. */
+export function NewPasswordFields({ label, disabled }: { label?: string; disabled?: boolean | undefined }) {
+  const { t } = useLang();
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const hintId = useId();
+  const issue = confirm ? checkNewPassword(pw, confirm) : null;
+  return (
+    <>
+      <Field label={label ?? t("password")}>
+        <PasswordInput name="password" autoComplete="new-password" value={pw} onChange={setPw} disabled={disabled} />
+      </Field>
+      <Field label={t("confirmPassword")}>
+        <PasswordInput name="confirm" autoComplete="new-password" value={confirm} onChange={setConfirm} disabled={disabled} />
+        {confirm && (
+          <span
+            id={hintId}
+            aria-live="polite"
+            className={cn("text-xs font-semibold", issue === "mismatch" ? "text-destructive-strong" : "text-success-strong")}
+          >
+            {issue === "mismatch" ? `✗ ${t("ePassMismatch")}` : issue === null ? `✓ ${t("passwordsMatch")}` : ""}
+          </span>
+        )}
+      </Field>
+    </>
   );
 }
 

@@ -174,7 +174,7 @@ export function RegistryDialog({
                 onClick={() => setFilter(k)}
                 className={cn(
                   "rounded-lg px-3 py-1.5 text-sm font-semibold",
-                  filter === k ? "bg-ink text-ink-foreground" : "bg-secondary text-secondary-foreground hover:bg-border",
+                  filter === k ? "bg-highlight text-highlight-foreground shadow-sm" : "bg-secondary text-secondary-foreground hover:bg-border",
                 )}
               >
                 {t(k)}
@@ -340,13 +340,13 @@ export function ConfirmSmsDialog({
                       key={s.key}
                       className={cn(
                         "flex items-center justify-between gap-2 rounded-lg px-3 py-2 ring-1",
-                        on ? "bg-primary-soft ring-primary-border" : "bg-destructive-soft ring-destructive-border",
+                        on ? "bg-success-soft ring-success-border" : "bg-destructive-soft ring-destructive-border",
                       )}
                     >
                       <span className="font-semibold text-foreground">
                         <span aria-hidden="true">{s.icon}</span> {lang === "ta" ? s.ta : s.en}
                       </span>
-                      <span className={cn("text-xs font-bold", on ? "text-primary-strong" : "text-destructive-hover")}>
+                      <span className={cn("text-xs font-bold", on ? "text-success-strong" : "text-destructive-hover")}>
                         {on ? t("inStock") : t("outStock")}
                       </span>
                     </li>
@@ -405,7 +405,7 @@ export function SmsDispatchDialog({ state, onClose }: { state: DispatchState | n
             </DialogTitle>
             <DialogDescription className="sr-only">{t("msgPreview")}</DialogDescription>
             <div className="rounded-xl bg-ink p-4 text-sm leading-relaxed text-ink-foreground">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">{t("msgPreview")}</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-highlight">{t("msgPreview")}</p>
               <p className="whitespace-pre-line">{state.message}</p>
             </div>
             {!state.done ? (
@@ -432,14 +432,14 @@ export function SmsDispatchDialog({ state, onClose }: { state: DispatchState | n
               </div>
             ) : (
               <>
-                <div className="flex flex-col items-center gap-1 rounded-xl bg-primary-soft p-5 text-center ring-1 ring-primary-border" role="status">
+                <div className="flex flex-col items-center gap-1 rounded-xl bg-success-soft p-5 text-center ring-1 ring-success-border" role="status">
                   <p className="text-4xl" aria-hidden="true">
                     ✅
                   </p>
-                  <p className="text-lg font-extrabold text-primary-strong">
+                  <p className="text-lg font-extrabold text-success-strong">
                     {t("summaryTitle", state.total.toLocaleString("en-IN"))}
                   </p>
-                  <p className="text-sm font-medium text-primary-strong">({t("summarySub")})</p>
+                  <p className="text-sm font-medium text-success-strong">({t("summarySub")})</p>
                 </div>
                 <button
                   type="button"

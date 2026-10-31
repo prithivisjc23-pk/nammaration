@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSmsMessage,
+  checkNewPassword,
   cardholderEmail,
   shopkeeperEmail,
   formatTime,
@@ -130,5 +131,17 @@ describe("SMS message", () => {
   it("morning open message lists only available stock", () => {
     const msg = buildSmsMessage("morning", { shopNumber: "1234", status: "open", crowd: "low", stock: DEFAULT_STOCK });
     expect(msg).toContain("Shop #1234: Shop is OPEN today. Available: Rice, Sugar, Oil, Paruppu (Toor Dal). Crowd: Low.");
+  });
+});
+
+describe("new password check", () => {
+  it("rejects passwords shorter than 6 characters", () => {
+    expect(checkNewPassword("abc12", "abc12")).toBe("short");
+  });
+  it("rejects when confirm password does not match", () => {
+    expect(checkNewPassword("ration123", "ration124")).toBe("mismatch");
+  });
+  it("accepts a 6+ character password typed the same twice", () => {
+    expect(checkNewPassword("ration123", "ration123")).toBeNull();
   });
 });
