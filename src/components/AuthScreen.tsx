@@ -577,7 +577,7 @@ export function PasswordInput({
 }: {
   name: string;
   autoComplete: "current-password" | "new-password";
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   value?: string;
   onChange?: (v: string) => void;
   id?: string;
@@ -616,7 +616,7 @@ export function PasswordInput({
 }
 
 /** Password + Confirm Password pair with a live "match" hint. Field names: `password`, `confirm`. */
-export function NewPasswordFields({ label, disabled }: { label?: string; disabled?: boolean }) {
+export function NewPasswordFields({ label, disabled }: { label?: string; disabled?: boolean | undefined }) {
   const { t } = useLang();
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
