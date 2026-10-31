@@ -68,7 +68,7 @@ export function BrandMark({ className }: { className?: string }) {
       )}
       aria-hidden="true"
     >
-      <Elephant className="absolute -bottom-1 -right-2 h-[85%] w-[85%] -scale-x-100 opacity-20" />
+      <Elephant className="absolute -bottom-1.5 -right-3 h-[90%] w-[90%] -scale-x-100 opacity-[0.14]" />
       <Elephant className="relative h-[68%] w-[68%]" />
     </div>
   );
