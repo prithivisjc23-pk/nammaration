@@ -23,5 +23,10 @@
 - [x] Dashboard fits one screen on desktop (3-column grid)
 - [x] Cardholder phone view: one-row top bar, tighter spacing, safe bottom padding
 
+## Theme + login polish (31 Oct)
+- [x] Crimson #8B0000 headers / primary, gold #FFD700 accents and active tabs, elephant badge + watermark
+- [x] Role selector: Card Holder (green/blue portal) vs Shopkeeper (red/gold dashboard)
+- [x] Show/Hide password toggle, Confirm Password check on sign-up and reset
+
 ## Waiting on user
 - [ ] Existing shopkeeper data import (old data lives only in each shopkeeper's browser)

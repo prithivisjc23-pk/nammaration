@@ -22,5 +22,7 @@
 - Live updates use Realtime on `shops` and `customers`; portal alerts are in-app toasts + browser Notification while the page is open (no push service).
 - `shops.status` (open/lunch/closed) is the source of truth; `is_open` is deprecated and kept in sync by trigger.
 - Theme: `.dark` class on <html>, set before hydration by `THEME_BOOT_SCRIPT`; all colors are tokens with light and dark values in `src/styles.css`.
+- Role palettes: shopkeeper screens use the root tokens; cardholder screens add the `.theme-card` class, which overrides the same tokens (light + dark). Open / available / collected use `success` tokens, never `primary`, so they stay green in every palette.
+- New-password forms use `NewPasswordFields` (Show/Hide toggle + Confirm Password) and `checkNewPassword` from `src/lib/ration.ts`.
 - SMS dispatch is simulated (progress animation + `sms_logs` row); no SMS provider is wired yet.
 - The sticky top bar for /dashboard and /portal is the shared `AppHeader` component; change it once so both stay one row on phones.
