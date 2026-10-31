@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const tones = {
   slate: "bg-card text-foreground ring-border",
   amber: "bg-warning-soft text-warning-strong ring-warning-border",
-  green: "bg-primary-soft text-primary-strong ring-primary-border",
+  green: "bg-success-soft text-success-strong ring-success-border",
 };
 
 function CounterCard({
@@ -105,7 +105,7 @@ const STATUS_STYLE: Record<
   ShopStatus,
   { icon: string; on: string; key: "statusOpen" | "statusLunch" | "statusClosed" }
 > = {
-  open: { icon: "🟢", on: "bg-primary text-primary-foreground border-primary", key: "statusOpen" },
+  open: { icon: "🟢", on: "bg-success text-success-foreground border-success", key: "statusOpen" },
   lunch: {
     icon: "🍱",
     on: "bg-warning text-warning-foreground border-warning",

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 type PortalShop = NonNullable<Awaited<ReturnType<NonNullable<ReturnType<typeof shopByIdQuery>["queryFn"]>>>>;
 
 const BANNER: Record<ShopStatus, string> = {
-  open: "bg-primary text-primary-foreground",
+  open: "bg-success text-success-foreground",
   lunch: "bg-warning text-warning-foreground",
   closed: "bg-destructive text-destructive-foreground",
 };
@@ -152,8 +152,8 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
         <section className={cn("rounded-2xl p-4 shadow-md transition-colors sm:p-5", BANNER[status])} aria-live="polite">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-bold uppercase tracking-widest opacity-90">{t("liveStatus")}</p>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/20 px-2.5 py-1 text-xs font-bold">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-primary-foreground" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-current/15 px-2.5 py-1 text-xs font-bold">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-current" aria-hidden="true" />
               {t("live")}
             </span>
           </div>
@@ -179,7 +179,7 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
                   key={s.key}
                   className={cn(
                     "flex items-center gap-1.5 rounded-xl border-2 px-2 py-2 sm:gap-2 sm:px-2.5",
-                    on ? "border-primary-border bg-primary-soft" : "border-destructive-border bg-destructive-soft",
+                    on ? "border-success-border bg-success-soft" : "border-destructive-border bg-destructive-soft",
                   )}
                 >
                   <span className="text-lg sm:text-xl" aria-hidden="true">
@@ -187,7 +187,7 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className="break-words text-[13px] font-bold leading-tight text-foreground sm:text-sm">{lang === "ta" ? s.ta : s.en}</span>
-                    <span className={cn("text-xs font-bold", on ? "text-primary-strong" : "text-destructive-strong")}>
+                    <span className={cn("text-xs font-bold", on ? "text-success-strong" : "text-destructive-strong")}>
                       {on ? `● ${t("inStock")}` : `○ ${t("outStock")}`}
                     </span>
                   </span>
@@ -209,7 +209,7 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
             <div
               className={cn(
                 "rounded-xl px-3 py-2.5 text-center ring-1",
-                collected ? "bg-primary-soft text-primary-strong ring-primary-border" : "bg-warning-soft text-warning-strong ring-warning-border",
+                collected ? "bg-success-soft text-success-strong ring-success-border" : "bg-warning-soft text-warning-strong ring-warning-border",
               )}
             >
               <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{t("collectionStatus")}</p>

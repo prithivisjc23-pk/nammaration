@@ -309,7 +309,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                 {(Object.keys(CROWD) as CrowdLevel[]).map((k) => {
                   const on = crowd === k;
                   const onCls = {
-                    low: "bg-primary text-primary-foreground border-primary",
+                    low: "bg-success text-success-foreground border-success",
                     medium: "bg-warning text-warning-foreground border-warning",
                     heavy: "bg-destructive text-destructive-foreground border-destructive",
                   }[k];
@@ -345,7 +345,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                       onClick={() => updateShop({ stock: { ...stock, [s.key as StockKey]: !on } })}
                       className={cn(
                         "flex items-center gap-2 rounded-xl border-2 px-2.5 py-2 text-left transition",
-                        on ? "border-primary-border bg-primary-soft" : "border-border bg-muted opacity-80",
+                        on ? "border-success-border bg-success-soft" : "border-border bg-muted opacity-80",
                       )}
                     >
                       <span className="text-lg" aria-hidden="true">
@@ -354,7 +354,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                       <span className="flex min-w-0 flex-col">
                         <span className="break-words text-sm font-bold leading-tight text-foreground">{s.ta}</span>
                         <span className="text-xs font-medium leading-tight text-muted-foreground">{s.en}</span>
-                        <span className={cn("text-xs font-semibold leading-tight", on ? "text-primary-strong" : "text-destructive-hover")}>
+                        <span className={cn("text-xs font-semibold leading-tight", on ? "text-success-strong" : "text-destructive-hover")}>
                           {on ? `● ${t("inStock")}` : `○ ${t("outStock")}`}
                         </span>
                       </span>
@@ -432,7 +432,7 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
               {t("smsPanel")}
             </h2>
             <p
-              className="rounded-xl bg-primary/15 px-3 py-2 text-sm font-bold text-primary-glow ring-1 ring-primary/40"
+              className="rounded-xl bg-highlight/15 px-3 py-2 text-sm font-bold text-highlight ring-1 ring-highlight/40"
               aria-live="polite"
             >
               🎯 {t("target", counts.pending)}
