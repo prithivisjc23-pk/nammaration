@@ -180,3 +180,12 @@ export function parseStock(value: unknown): StockState {
     return acc;
   }, {} as StockState);
 }
+
+export const MIN_PASSWORD = 6;
+
+/** New-password check used by every sign-up / reset form: long enough, and typed the same twice. */
+export function checkNewPassword(password: string, confirm: string): "short" | "mismatch" | null {
+  if (password.length < MIN_PASSWORD) return "short";
+  if (password !== confirm) return "mismatch";
+  return null;
+}
