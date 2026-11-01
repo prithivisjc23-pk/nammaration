@@ -589,7 +589,10 @@ export function AuthShell({ children, wide = false }: { children: ReactNode; wid
         <div className={cn("mx-auto flex w-full items-center justify-between gap-3 px-4 py-3", wide ? "max-w-5xl" : "max-w-md")}>
           <div className="min-w-0">
             <h1 className="truncate text-base font-extrabold text-foreground sm:text-lg">
-              Namma Ration <span className="font-normal text-muted-foreground">·</span> நம்ம ரேஷன்
+              <span className="sm:hidden">{t("appName")}</span>
+              <span className="hidden sm:inline">
+                Namma Ration <span className="font-normal text-muted-foreground">·</span> நம்ம ரேஷன்
+              </span>
             </h1>
             <p className="truncate text-xs text-muted-foreground sm:text-sm">{t("taglineAuth")}</p>
           </div>
