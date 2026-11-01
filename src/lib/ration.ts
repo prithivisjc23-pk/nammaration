@@ -66,6 +66,13 @@ export const CROWD: Record<CrowdLevel, { en: string; ta: string }> = {
   heavy: { en: "Heavy", ta: "அதிகம்" },
 };
 
+/** Short on-screen crowd labels (the SMS keeps using CROWD). */
+export const CROWD_LABEL: Record<CrowdLevel, { en: string; ta: string }> = {
+  low: { en: "Low Crowd", ta: "கூட்டம் குறைவு" },
+  medium: { en: "Moderate Crowd", ta: "மிதமான கூட்டம்" },
+  heavy: { en: "High Crowd", ta: "கூட்டம் அதிகம்" },
+};
+
 export const monthKey = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 

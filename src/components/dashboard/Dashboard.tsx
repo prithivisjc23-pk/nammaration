@@ -7,6 +7,7 @@ import { useLang } from "@/hooks/use-lang";
 import { AppHeader } from "@/components/AppHeader";
 import {
   CROWD,
+  CROWD_LABEL,
   STOCK_ITEMS,
   buildSmsMessage,
   countCustomers,
@@ -321,11 +322,11 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                       aria-checked={on}
                       onClick={() => updateShop({ crowd: k })}
                       className={cn(
-                        "rounded-xl border-2 px-2 py-2 text-sm font-bold transition",
+                        "rounded-xl border-2 px-2 py-2 text-base font-extrabold leading-tight transition",
                         on ? onCls : "border-border bg-muted text-secondary-foreground hover:border-input",
                       )}
                     >
-                      {CROWD[k][lang]}
+                      {CROWD_LABEL[k][lang]}
                     </button>
                   );
                 })}
