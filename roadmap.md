@@ -28,5 +28,9 @@
 - [x] Role selector: Card Holder (green/blue portal) vs Shopkeeper (red/gold dashboard)
 - [x] Show/Hide password toggle, Confirm Password check on sign-up and reset
 
+## Login redesign (1 Nov)
+- [x] Neutral light sign-in page, no red wash or elephant watermarks; crimson buttons, gold active indicators
+- [x] Desktop: Shopkeeper panel left, Card Holder panel right; phones: top toggle
+
 ## Waiting on user
 - [ ] Existing shopkeeper data import (old data lives only in each shopkeeper's browser)
