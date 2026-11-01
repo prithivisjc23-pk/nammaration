@@ -74,7 +74,7 @@ export function BrandMark({ className }: { className?: string }) {
   );
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ plain = false }: { plain?: boolean }) {
   const { dark, toggle } = useTheme();
   const { t } = useLang();
   return (
@@ -84,7 +84,10 @@ export function ThemeToggle() {
       aria-pressed={dark}
       aria-label={t("themeToggle")}
       title={t("themeToggle")}
-      className="rounded-lg bg-ink-2 px-2 py-1.5 text-sm text-ink-foreground hover:bg-ink-3 sm:px-2.5"
+      className={cn(
+        "rounded-lg px-2 py-1.5 text-sm sm:px-2.5",
+        plain ? "bg-secondary text-secondary-foreground hover:bg-border" : "bg-ink-2 text-ink-foreground hover:bg-ink-3",
+      )}
     >
       {dark ? "☀️" : "🌙"}
     </button>
