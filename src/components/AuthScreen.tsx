@@ -129,7 +129,7 @@ function Panel({
   title: string;
   sub: string;
   footer: string;
-  className?: string;
+  className?: string | undefined;
   children: ReactNode;
 }) {
   return (
@@ -180,7 +180,7 @@ function PanelTabs({
   );
 }
 
-function ShopPanel({ className }: { className?: string }) {
+function ShopPanel({ className }: { className?: string | undefined }) {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>("login");
   const [error, setError] = useState<string | null>(null);
@@ -373,7 +373,7 @@ function ShopPanel({ className }: { className?: string }) {
   );
 }
 
-function CardPanel({ className }: { className?: string }) {
+function CardPanel({ className }: { className?: string | undefined }) {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>("login");
   const [error, setError] = useState<string | null>(null);
