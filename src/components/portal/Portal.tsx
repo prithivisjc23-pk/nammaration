@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
 import { AppHeader } from "@/components/AppHeader";
 import { statusIcon, statusLabelKey } from "@/components/dashboard/parts";
-import { CROWD, STOCK_ITEMS, parseStatus, parseStock, type CrowdLevel, type ShopStatus } from "@/lib/ration";
+import { CROWD_LABEL, STOCK_ITEMS, parseStatus, parseStock, type CrowdLevel, type ShopStatus } from "@/lib/ration";
 import { myCardQuery, resolveHome, shopByIdQuery, type Customer } from "@/lib/shop-data";
 import { cn } from "@/lib/utils";
 
@@ -162,8 +162,8 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
             {shop ? t(statusLabelKey(status)) : "…"}
           </p>
           {shop && (
-            <p className="mt-1 text-sm font-semibold opacity-90">
-              {t("crowdLevel")}: {CROWD[shop.crowd as CrowdLevel]?.[lang] ?? shop.crowd}
+            <p className="mt-2 text-lg font-extrabold sm:text-xl">
+              👥 {CROWD_LABEL[shop.crowd as CrowdLevel]?.[lang] ?? shop.crowd}
             </p>
           )}
         </section>
