@@ -1,11 +1,11 @@
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { CreditCard, Eye, EyeOff, Store } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
-import { BrandMark, Elephant, LangToggle, ThemeToggle } from "@/components/LangToggle";
+import { LangToggle, ThemeToggle } from "@/components/LangToggle";
 import { registerShopkeeper, signInShopkeeper, type ShopkeeperRegisterError } from "@/lib/auth.functions";
 import { registerCardholder, type CardholderRegisterError } from "@/lib/cardholder.functions";
 import { districtShopsQuery, resolveHome, shopIdPreviewQuery } from "@/lib/shop-data";
@@ -53,16 +53,8 @@ const SHOP_ERRORS: Record<ShopkeeperRegisterError, I18nKey> = {
 export function AuthScreen() {
   const { t } = useLang();
   const navigate = useNavigate();
+  // Phones show one portal at a time; from md up both sit side by side.
   const [role, setRole] = useState<Role>("shop");
-  const [tab, setTab] = useState<Tab>("login");
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<{ title?: string; body: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [shopDistrict, setShopDistrict] = useState("");
-  const shopIdQ = useQuery(shopIdPreviewQuery(shopDistrict));
-  const login = useServerFn(signInShopkeeper);
-  const registerCard = useServerFn(registerCardholder);
-  const registerShop = useServerFn(registerShopkeeper);
 
   const goHome = async (userId: string) => {
     const home = await resolveHome(userId);
@@ -86,18 +78,123 @@ export function AuthScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const reset = () => {
-    setError(null);
-    setInfo(null);
-  };
+  return (
+    <AuthShell wide>
+      <div
+        className="mb-4 grid grid-cols-2 gap-1 rounded-xl border border-border bg-secondary p-1 md:hidden"
+        role="tablist"
+        aria-label={t("signInAs")}
+      >
+        {(["shop", "card"] as const).map((r) => (
+          <button
+            key={r}
+            type="button"
+            role="tab"
+            aria-selected={role === r}
+            onClick={() => setRole(r)}
+            className={cn(
+              "relative flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-sm font-bold transition",
+              role === r
+                ? "bg-card text-foreground shadow-sm after:absolute after:inset-x-6 after:bottom-1 after:h-0.5 after:rounded-full after:bg-highlight"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {r === "shop" ? (
+              <Store className="hidden h-4 w-4 shrink-0 min-[420px]:block" aria-hidden="true" />
+            ) : (
+              <CreditCard className="hidden h-4 w-4 shrink-0 min-[420px]:block" aria-hidden="true" />
+            )}
+            {t(r === "shop" ? "roleShop" : "roleCardHolder")}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid items-start gap-4 md:grid-cols-2 md:gap-6">
+        <ShopPanel className={cn(role !== "shop" && "hidden md:flex")} />
+        <CardPanel className={cn(role !== "card" && "hidden md:flex")} />
+      </div>
+    </AuthShell>
+  );
+}
+
+function Panel({
+  icon,
+  title,
+  sub,
+  footer,
+  className,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  sub: string;
+  footer: string;
+  className?: string | undefined;
+  children: ReactNode;
+}) {
+  return (
+    <section className={cn("flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6", className)}>
+      <header className="mb-4 flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-secondary-foreground">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-lg font-extrabold leading-tight text-foreground">{title}</h2>
+          <p className="text-sm text-muted-foreground">{sub}</p>
+        </div>
+      </header>
+      {children}
+      <p className="mt-5 text-center text-xs text-muted-foreground">🔒 {footer}</p>
+    </section>
+  );
+}
+
+function PanelTabs({
+  tab,
+  onChange,
+  registerLabel,
+}: {
+  tab: Tab;
+  onChange: (t: "login" | "register") => void;
+  registerLabel: string;
+}) {
+  const { t } = useLang();
+  return (
+    <div className="mb-5 flex gap-5 border-b border-border" role="tablist">
+      {(["login", "register"] as const).map((k) => (
+        <button
+          key={k}
+          type="button"
+          role="tab"
+          aria-selected={tab === k}
+          onClick={() => onChange(k)}
+          className={cn(
+            "-mb-px border-b-2 pb-2.5 text-sm font-bold transition",
+            tab === k ? "border-highlight text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {k === "login" ? t("login") : registerLabel}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ShopPanel({ className }: { className?: string | undefined }) {
+  const { t } = useLang();
+  const [tab, setTab] = useState<Tab>("login");
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [shopDistrict, setShopDistrict] = useState("");
+  const shopIdQ = useQuery(shopIdPreviewQuery(shopDistrict));
+  const login = useServerFn(signInShopkeeper);
+  const registerShop = useServerFn(registerShopkeeper);
+
   const switchTab = (next: Tab) => {
     setTab(next);
-    reset();
-  };
-  const switchRole = (next: Role) => {
-    setRole(next);
-    setTab("login");
-    reset();
+    setError(null);
+    setInfo(null);
   };
 
   async function handleShopLogin(e: FormEvent<HTMLFormElement>) {
@@ -176,8 +273,117 @@ export function AuthScreen() {
     setError(null);
     await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
     setBusy(false);
-    setInfo({ body: t("resetSent") });
+    setInfo(t("resetSent"));
   }
+
+  return (
+    <Panel
+      className={className}
+      icon={<Store className="h-5 w-5" aria-hidden="true" />}
+      title={t("roleShop")}
+      sub={t("roleShopSub")}
+      footer={t("authOnly")}
+    >
+      {tab !== "forgot" && <PanelTabs tab={tab} onChange={switchTab} registerLabel={t("registerShop")} />}
+
+      {info && (
+        <div className="mb-4 rounded-xl bg-secondary px-4 py-3 text-sm text-secondary-foreground ring-1 ring-border" role="status">
+          <p>📧 {info}</p>
+        </div>
+      )}
+
+      {tab === "login" && (
+        <form onSubmit={handleShopLogin} className="flex flex-col gap-4" noValidate>
+          <Field label={t("loginId")}>
+            <input name="loginId" required autoComplete="username" className={inputCls} placeholder="TRIC-1" />
+          </Field>
+          <Field label={t("password")}>
+            <PasswordInput name="password" autoComplete="current-password" />
+          </Field>
+          <ErrorText msg={error} />
+          <SubmitButton busy={busy}>{t("loginBtn")}</SubmitButton>
+          <button
+            type="button"
+            onClick={() => switchTab("forgot")}
+            className="text-center text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline"
+          >
+            {t("forgot")}
+          </button>
+        </form>
+      )}
+
+      {tab === "register" && (
+        <form onSubmit={handleShopRegister} className="flex flex-col gap-4" noValidate>
+          <Field label={t("shopName")}>
+            <input name="shopName" required maxLength={80} autoComplete="organization" className={inputCls} />
+          </Field>
+          <Field label={t("area")}>
+            <DistrictSelect value={shopDistrict} onChange={setShopDistrict} />
+          </Field>
+          <Field label={t("shopIdAuto")}>
+            <div
+              className={cn(inputCls, "bg-muted font-mono font-bold tracking-wider", !shopDistrict && "font-sans font-normal tracking-normal text-muted-foreground")}
+              aria-live="polite"
+            >
+              {!shopDistrict ? t("shopIdPick") : shopIdQ.data?.shopId ?? "…"}
+            </div>
+            {shopDistrict && shopIdQ.data?.shopId && <span className="text-xs text-muted-foreground">{t("shopIdNote")}</span>}
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t("talukOpt")}>
+              <input name="taluk" autoComplete="off" className={inputCls} />
+            </Field>
+            <Field label={t("wardOpt")}>
+              <input name="ward" autoComplete="off" className={inputCls} />
+            </Field>
+          </div>
+          <Field label={t("shopMobile")}>
+            <MobileInput />
+          </Field>
+          <Field label={t("username")}>
+            <input name="username" required autoComplete="username" className={inputCls} />
+          </Field>
+          <NewPasswordFields />
+          <ErrorText msg={error} />
+          <SubmitButton busy={busy}>{t("createShop")}</SubmitButton>
+        </form>
+      )}
+
+      {tab === "forgot" && (
+        <form onSubmit={handleForgot} className="flex flex-col gap-4" noValidate>
+          <div>
+            <h3 className="text-base font-bold text-foreground">{t("forgotTitle")}</h3>
+            <p className="text-sm text-muted-foreground">{t("forgotSub")}</p>
+          </div>
+          <Field label={t("email")}>
+            <input name="email" type="email" required autoComplete="email" className={inputCls} />
+          </Field>
+          <ErrorText msg={error} />
+          <SubmitButton busy={busy}>{t("sendReset")}</SubmitButton>
+          <button
+            type="button"
+            onClick={() => switchTab("login")}
+            className="text-center text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline"
+          >
+            ← {t("backToLogin")}
+          </button>
+        </form>
+      )}
+    </Panel>
+  );
+}
+
+function CardPanel({ className }: { className?: string | undefined }) {
+  const { t } = useLang();
+  const [tab, setTab] = useState<Tab>("login");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const registerCard = useServerFn(registerCardholder);
+
+  const switchTab = (next: Tab) => {
+    setTab(next);
+    setError(null);
+  };
 
   async function handleCardLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -215,138 +421,16 @@ export function AuthScreen() {
   }
 
   return (
-    <AuthShell tone={role}>
-      <p className="mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("signInAs")}</p>
-      <div className="mb-4 grid grid-cols-2 gap-2" role="radiogroup" aria-label={t("signInAs")}>
-        {(["card", "shop"] as const).map((r) => (
-          <button
-            key={r}
-            type="button"
-            role="radio"
-            aria-checked={role === r}
-            onClick={() => switchRole(r)}
-            className={cn(
-              "flex flex-col items-start gap-0.5 rounded-xl border-2 px-3 py-2.5 text-left transition",
-              role === r
-                ? "border-primary bg-primary-soft text-primary-strong shadow-sm"
-                : "border-border bg-muted text-muted-foreground hover:border-input",
-            )}
-          >
-            <span className="flex items-center gap-1.5 text-sm font-extrabold">
-              <span aria-hidden="true">{r === "shop" ? "🏪" : "🪪"}</span>
-              {t(r === "shop" ? "roleShop" : "roleCardHolder")}
-            </span>
-            <span className="text-xs font-medium leading-snug opacity-80">{t(r === "shop" ? "roleShopSub" : "roleCardSub")}</span>
-          </button>
-        ))}
-      </div>
+    <Panel
+      className={className}
+      icon={<CreditCard className="h-5 w-5" aria-hidden="true" />}
+      title={t("roleCardHolder")}
+      sub={t("roleCardSub")}
+      footer={t("authOnlyCard")}
+    >
+      <PanelTabs tab={tab} onChange={switchTab} registerLabel={t("cardRegister")} />
 
-      {tab !== "forgot" && (
-        <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-secondary p-1" role="tablist">
-          {(["login", "register"] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="tab"
-              aria-selected={tab === k}
-              onClick={() => switchTab(k)}
-              className={cn(
-                "rounded-lg py-2.5 text-sm font-bold",
-                tab === k ? "bg-highlight text-highlight-foreground shadow" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {t(k === "login" ? "login" : role === "shop" ? "registerShop" : "cardRegister")}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {info && (
-        <div className="mb-4 rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary-strong ring-1 ring-primary-border" role="status">
-          {info.title && <p className="font-bold">📧 {info.title}</p>}
-          <p>{info.body}</p>
-        </div>
-      )}
-
-      {role === "shop" && tab === "login" && (
-        <form onSubmit={handleShopLogin} className="flex flex-col gap-4" noValidate>
-          <Field label={t("loginId")}>
-            <input name="loginId" required autoComplete="username" className={inputCls} placeholder="TRIC-1" />
-          </Field>
-          <Field label={t("password")}>
-            <PasswordInput name="password" autoComplete="current-password" />
-          </Field>
-          <ErrorText msg={error} />
-          <SubmitButton busy={busy}>{t("loginBtn")}</SubmitButton>
-          <button
-            type="button"
-            onClick={() => switchTab("forgot")}
-            className="text-center text-sm font-semibold text-primary-strong hover:underline"
-          >
-            {t("forgot")}
-          </button>
-        </form>
-      )}
-
-      {role === "shop" && tab === "register" && (
-        <form onSubmit={handleShopRegister} className="flex flex-col gap-4" noValidate>
-          <Field label={t("shopName")}>
-            <input name="shopName" required maxLength={80} autoComplete="organization" className={inputCls} />
-          </Field>
-          <Field label={t("area")}>
-            <DistrictSelect value={shopDistrict} onChange={setShopDistrict} />
-          </Field>
-          <Field label={t("shopIdAuto")}>
-            <div
-              className={cn(inputCls, "bg-muted font-mono font-bold tracking-wider", !shopDistrict && "font-sans font-normal tracking-normal text-muted-foreground")}
-              aria-live="polite"
-            >
-              {!shopDistrict ? t("shopIdPick") : shopIdQ.data?.shopId ?? "…"}
-            </div>
-            {shopDistrict && shopIdQ.data?.shopId && <span className="text-xs text-muted-foreground">{t("shopIdNote")}</span>}
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t("talukOpt")}>
-              <input name="taluk" autoComplete="off" className={inputCls} />
-            </Field>
-            <Field label={t("wardOpt")}>
-              <input name="ward" autoComplete="off" className={inputCls} />
-            </Field>
-          </div>
-          <Field label={t("shopMobile")}>
-            <MobileInput />
-          </Field>
-          <Field label={t("username")}>
-            <input name="username" required autoComplete="username" className={inputCls} />
-          </Field>
-          <NewPasswordFields />
-          <ErrorText msg={error} />
-          <SubmitButton busy={busy}>{t("createShop")}</SubmitButton>
-        </form>
-      )}
-
-      {role === "shop" && tab === "forgot" && (
-        <form onSubmit={handleForgot} className="flex flex-col gap-4" noValidate>
-          <div>
-            <h2 className="text-lg font-bold text-foreground">{t("forgotTitle")}</h2>
-            <p className="text-sm text-muted-foreground">{t("forgotSub")}</p>
-          </div>
-          <Field label={t("email")}>
-            <input name="email" type="email" required autoComplete="email" className={inputCls} />
-          </Field>
-          <ErrorText msg={error} />
-          <SubmitButton busy={busy}>{t("sendReset")}</SubmitButton>
-          <button
-            type="button"
-            onClick={() => switchTab("login")}
-            className="text-center text-sm font-semibold text-primary-strong hover:underline"
-          >
-            ← {t("backToLogin")}
-          </button>
-        </form>
-      )}
-
-      {role === "card" && tab === "login" && (
+      {tab === "login" && (
         <form onSubmit={handleCardLogin} className="flex flex-col gap-4" noValidate>
           <Field label={t("fCard")}>
             <input name="card" required autoComplete="username" className={cn(inputCls, "uppercase tracking-wide")} placeholder="33/G/0123456" />
@@ -360,10 +444,10 @@ export function AuthScreen() {
         </form>
       )}
 
-      {role === "card" && tab === "register" && (
+      {tab === "register" && (
         <CardRegisterForm busy={busy} error={error} setError={setError} onSubmit={handleCardRegister} />
       )}
-    </AuthShell>
+    </Panel>
   );
 }
 
@@ -500,34 +584,38 @@ function MobileInput() {
   );
 }
 
-export function AuthShell({ children, tone = "shop" }: { children: ReactNode; tone?: Role }) {
+/** Clean, neutral sign-in page frame. `wide` hosts the two portal panels; otherwise one centred card. */
+export function AuthShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const { t } = useLang();
   return (
-    <main
-      className={cn(
-        "relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-ink px-4 py-10 transition-colors",
-        tone === "card" && "theme-card",
-      )}
-    >
-      <Elephant className="pointer-events-none absolute -bottom-10 -right-16 h-72 w-96 text-ink-foreground opacity-[0.06] sm:h-96 sm:w-[32rem]" />
-      <Elephant className="pointer-events-none absolute -left-20 top-6 h-40 w-56 -scale-x-100 text-ink-foreground opacity-[0.04]" />
-      <div className="relative mb-6 flex w-full max-w-md items-center gap-3">
-        <BrandMark className="h-12 w-12" />
-        <div>
-          <h1 className="text-xl font-extrabold text-ink-foreground">
-            Namma Ration <span className="text-highlight">|</span> நம்ம ரேஷன்
-          </h1>
-          <p className="text-sm text-ink-muted">{t(tone === "card" ? "taglineCard" : "tagline")}</p>
+    <main className="theme-auth flex min-h-screen flex-col bg-background">
+      <header className="border-b border-border bg-card">
+        <div className={cn("mx-auto flex w-full items-center justify-between gap-3 px-4 py-3", wide ? "max-w-5xl" : "max-w-md")}>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-extrabold text-foreground sm:text-lg">
+              <span className={cn(wide && "sm:hidden")}>{t("appName")}</span>
+              <span className={cn("hidden", wide && "sm:inline")}>
+                Namma Ration <span className="font-normal text-muted-foreground">·</span> நம்ம ரேஷன்
+              </span>
+            </h1>
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">{t("taglineAuth")}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle plain />
+            <LangToggle />
+          </div>
         </div>
+      </header>
+      <div className={cn("mx-auto w-full flex-1 px-4 py-5 sm:py-10", wide ? "max-w-5xl" : "max-w-md")}>
+        {wide ? (
+          children
+        ) : (
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            {children}
+            <p className="mt-5 text-center text-xs text-muted-foreground">🔒 {t("authOnly")}</p>
+          </section>
+        )}
       </div>
-      <div className="relative mb-4 flex w-full max-w-md justify-end gap-2">
-        <ThemeToggle />
-        <LangToggle dark />
-      </div>
-      <section className="relative w-full max-w-md rounded-2xl border-t-4 border-highlight bg-card p-5 shadow-2xl sm:p-6">
-        {children}
-        <p className="mt-5 text-center text-xs text-muted-foreground">🔒 {t(tone === "card" ? "authOnlyCard" : "authOnly")}</p>
-      </section>
     </main>
   );
 }
