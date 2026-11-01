@@ -93,13 +93,17 @@ export function AuthScreen() {
             aria-selected={role === r}
             onClick={() => setRole(r)}
             className={cn(
-              "relative flex items-center justify-center gap-1.5 rounded-lg px-2 py-2.5 text-sm font-bold transition",
+              "relative flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-2.5 text-sm font-bold transition",
               role === r
                 ? "bg-card text-foreground shadow-sm after:absolute after:inset-x-6 after:bottom-1 after:h-0.5 after:rounded-full after:bg-highlight"
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {r === "shop" ? <Store className="h-4 w-4" aria-hidden="true" /> : <CreditCard className="h-4 w-4" aria-hidden="true" />}
+            {r === "shop" ? (
+              <Store className="hidden h-4 w-4 shrink-0 min-[420px]:block" aria-hidden="true" />
+            ) : (
+              <CreditCard className="hidden h-4 w-4 shrink-0 min-[420px]:block" aria-hidden="true" />
+            )}
             {t(r === "shop" ? "roleShop" : "roleCardHolder")}
           </button>
         ))}
@@ -589,8 +593,8 @@ export function AuthShell({ children, wide = false }: { children: ReactNode; wid
         <div className={cn("mx-auto flex w-full items-center justify-between gap-3 px-4 py-3", wide ? "max-w-5xl" : "max-w-md")}>
           <div className="min-w-0">
             <h1 className="truncate text-base font-extrabold text-foreground sm:text-lg">
-              <span className="sm:hidden">{t("appName")}</span>
-              <span className="hidden sm:inline">
+              <span className={cn(wide && "sm:hidden")}>{t("appName")}</span>
+              <span className={cn("hidden", wide && "sm:inline")}>
                 Namma Ration <span className="font-normal text-muted-foreground">·</span> நம்ம ரேஷன்
               </span>
             </h1>
