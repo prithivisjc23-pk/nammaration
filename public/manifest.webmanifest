@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "Namma Ration | நம்ம ரேஷன்",
+  "short_name": "Namma Ration",
+  "description": "PDS ration shop management for shopkeepers and live shop status for cardholders in Tamil Nadu.",
+  "lang": "ta-IN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "theme_color": "#8B0000",
+  "background_color": "#FAF7F0",
+  "categories": ["utilities", "government", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
