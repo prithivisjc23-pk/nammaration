@@ -27,3 +27,4 @@
 - New-password forms use `NewPasswordFields` (Show/Hide toggle + Confirm Password) and `checkNewPassword` from `src/lib/ration.ts`.
 - SMS dispatch is simulated (progress animation + `sms_logs` row); no SMS provider is wired yet.
 - The sticky top bar for /dashboard and /portal is the shared `AppHeader` component; change it once so both stay one row on phones.
+- Home-screen install is manifest-only (`public/manifest.webmanifest`, icons in `public/icons/`, Apple meta tags in `__root.tsx`); no service worker, since offline use was not requested and workers cache stale builds in preview.

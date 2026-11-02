@@ -32,5 +32,8 @@
 - [x] Neutral light sign-in page, no red wash or elephant watermarks; crimson buttons, gold active indicators
 - [x] Desktop: Shopkeeper panel left, Card Holder panel right; phones: top toggle
 
+## Phone home-screen app (2 Nov)
+- [x] Manifest + icons + iOS/Android meta: opens full-screen without browser bars
+
 ## Waiting on user
 - [ ] Existing shopkeeper data import (old data lives only in each shopkeeper's browser)

@@ -589,7 +589,7 @@ export function AuthShell({ children, wide = false }: { children: ReactNode; wid
   const { t } = useLang();
   return (
     <main className="theme-auth flex min-h-screen flex-col bg-background">
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card pt-[env(safe-area-inset-top)]">
         <div className={cn("mx-auto flex w-full items-center justify-between gap-3 px-4 py-3", wide ? "max-w-5xl" : "max-w-md")}>
           <div className="min-w-0">
             <h1 className="truncate text-base font-extrabold text-foreground sm:text-lg">
