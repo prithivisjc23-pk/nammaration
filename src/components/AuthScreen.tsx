@@ -295,7 +295,7 @@ function ShopPanel({ className }: { className?: string | undefined }) {
       {tab === "login" && (
         <form onSubmit={handleShopLogin} className="flex flex-col gap-4" noValidate>
           <Field label={t("loginId")}>
-            <input name="loginId" required autoComplete="username" className={inputCls} placeholder="TRIC-1" />
+            <input name="loginId" required autoComplete="username" className={inputCls} />
           </Field>
           <Field label={t("password")}>
             <PasswordInput name="password" autoComplete="current-password" />
@@ -433,7 +433,7 @@ function CardPanel({ className }: { className?: string | undefined }) {
       {tab === "login" && (
         <form onSubmit={handleCardLogin} className="flex flex-col gap-4" noValidate>
           <Field label={t("fCard")}>
-            <input name="card" required autoComplete="username" className={cn(inputCls, "uppercase tracking-wide")} placeholder="33/G/0123456" />
+            <input name="card" required autoComplete="username" className={cn(inputCls, "uppercase tracking-wide")} />
           </Field>
           <Field label={t("password")}>
             <PasswordInput name="password" autoComplete="current-password" />
@@ -495,7 +495,7 @@ function CardRegisterForm({
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
       <Field label={t("fCard")}>
-        <input name="card" required autoComplete="off" className={cn(inputCls, "uppercase tracking-wide")} placeholder="33/G/0123456" />
+        <input name="card" required autoComplete="off" className={cn(inputCls, "uppercase tracking-wide")} />
       </Field>
       <Field label={t("fMobile")}>
         <MobileInput />
@@ -576,7 +576,6 @@ function MobileInput() {
       inputMode="numeric"
       autoComplete="tel"
       maxLength={10}
-      placeholder="9876543210"
       value={v}
       onChange={(e) => setV(e.target.value.replace(/\D/g, "").slice(0, 10))}
       className={cn(inputCls, "tracking-wider")}
