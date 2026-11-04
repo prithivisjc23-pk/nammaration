@@ -232,17 +232,24 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
           <p className="text-xs text-ink-muted">ℹ️ {t("alertsNote")}</p>
         </section>
 
-        {shop && (shop.mobile || shop.taluk || shop.ward) && (
-          <section className="rounded-2xl bg-card p-4 text-sm shadow-sm ring-1 ring-border">
-            <h2 className="mb-1.5 text-base font-bold">📞 {t("shopContact")}</h2>
-            {shop.mobile && (
-              <a href={`tel:${shop.mobile}`} className="font-bold text-primary-strong hover:underline">
-                {shop.mobile}
-              </a>
-            )}
-            <p className="text-muted-foreground">{[shop.ward, shop.taluk, shop.district].filter(Boolean).join(", ")}</p>
-          </section>
-        )}
+        <section className="flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 text-sm shadow-sm ring-1 ring-border">
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold">🛟 {t("helpTitle")}</h2>
+            <p className="text-xs text-muted-foreground">
+              {t("helpline")}: <span className="font-semibold text-foreground">1800-XXX-XXXX</span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("helpTiming")}: <span className="font-semibold text-foreground">9 AM - 6 PM</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => toast(t("complaintSoon"))}
+            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary-hover"
+          >
+            {t("raiseComplaint")}
+          </button>
+        </section>
       </main>
     </div>
   );
