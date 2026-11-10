@@ -90,6 +90,10 @@ const en = {
   tPwReset: "Password updated. Tell the cardholder their new password.", savePassword: "Save password",
   alreadyCollected: "Quota Already Collected for this Month", lookupCard: "Check Across Shops", crossShopPending: "Pending at another shop — eligible for collection here.", lookupHint: "Enter the complete card ID or registered phone number for a cross-shop check.",
   superAdmin: "Super Admin", manageShops: "Manage Shops", addShop: "Add Shop", activeShop: "Active", adminDenied: "Only the Super Admin can manage shops.", shopCreated: "Shop created. The shopkeeper can now sign in with its Shop ID.", familyDetails: "Family Details", monthlyQuota: "Monthly Quota", noQuota: "Quota details have not been assigned.",
+  simulateReset: "Simulate Next Month Reset",
+  simulateResetTitle: "Reset all quotas for a demonstration?",
+  simulateResetBody: "All cardholders across every shop will become Pending and can collect again immediately, even this month. Previous collections remain in history. This affects live records.",
+  simulateResetDone: (n: number) => `Reset complete. ${n} cardholders are now Pending.`,
   themeToggle: "Toggle dark mode",
 } satisfies Record<string, Entry>;
 
@@ -183,6 +187,10 @@ const ta: Dict = {
   tPwReset: "கடவுச்சொல் மாற்றப்பட்டது. அட்டைதாரரிடம் புதிய கடவுச்சொல்லைத் தெரிவிக்கவும்.", savePassword: "கடவுச்சொல்லைச் சேமி",
   alreadyCollected: "இந்த மாத ஒதுக்கீடு ஏற்கனவே வாங்கியாயிற்று", lookupCard: "அனைத்து கடைகளிலும் சரிபார்", crossShopPending: "வேறு கடையில் பதிவு உள்ளது — இங்கு வாங்கத் தகுதியுள்ளது.", lookupHint: "முழு அட்டை எண் அல்லது பதிவு செய்த கைபேசி எண்ணை உள்ளிடவும்.",
   superAdmin: "முதன்மை நிர்வாகி", manageShops: "கடைகளை நிர்வகி", addShop: "கடை சேர்", activeShop: "செயலில்", adminDenied: "முதன்மை நிர்வாகிக்கு மட்டுமே கடைகளை நிர்வகிக்க அனுமதி.", shopCreated: "கடை உருவாக்கப்பட்டது. கடை எண்ணைப் பயன்படுத்தி உரிமையாளர் உள்நுழையலாம்.", familyDetails: "குடும்ப விவரங்கள்", monthlyQuota: "மாத ஒதுக்கீடு", noQuota: "ஒதுக்கீட்டு விவரங்கள் இன்னும் வழங்கப்படவில்லை.",
+  simulateReset: "அடுத்த மாத மீட்டமைப்பைச் சோதிக்கவும்",
+  simulateResetTitle: "செயல்விளக்கத்திற்காக அனைத்து ஒதுக்கீடுகளையும் மீட்டமைக்கவா?",
+  simulateResetBody: "அனைத்துக் கடைகளின் அட்டைதாரர்களும் நிலுவைக்கு மாறி, இந்த மாதத்திலும் உடனடியாக மீண்டும் வாங்கலாம். முந்தைய விநியோக வரலாறு பாதுகாக்கப்படும். இது நேரடி பதிவுகளை மாற்றும்.",
+  simulateResetDone: (n: number) => `மீட்டமைப்பு முடிந்தது. ${n} அட்டைதாரர்கள் இப்போது நிலுவையில் உள்ளனர்.`,
   themeToggle: "இருள் / ஒளி முறை",
 };
 

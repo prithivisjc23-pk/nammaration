@@ -7,10 +7,11 @@ vi.mock("@tanstack/react-start", () => ({ createServerFn: () => {
 } }));
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from: mocks.admin } }));
-import { createManagedShop, listManagedShops } from "./admin.functions";
+import { createManagedShop, listManagedShops, simulateNextMonthReset } from "./admin.functions";
 const context = { userId: "shop-owner", supabase: { rpc: mocks.role } };
 const create = createManagedShop as unknown as (args: { data: unknown; context: typeof context }) => Promise<{ ok: boolean; error?: string }>;
 const list = listManagedShops as unknown as (args: { context: typeof context }) => Promise<{ allowed: boolean }>;
+const reset = simulateNextMonthReset as unknown as (args: { context: typeof context }) => Promise<{ ok: boolean; count?: number; error?: string }>;
 describe("Super Admin exclusive shop management", () => {
   beforeEach(() => { vi.resetAllMocks(); mocks.role.mockResolvedValue({ data: false, error: null }); });
   it("prevents a regular shopkeeper from adding any shop", async () => {
@@ -21,5 +22,20 @@ describe("Super Admin exclusive shop management", () => {
   it("hides the managed shop list from regular shopkeepers", async () => {
     expect((await list({ context })).allowed).toBe(false);
     expect(mocks.admin).not.toHaveBeenCalled();
+  });
+  it("denies demonstration quota resets to regular shopkeepers", async () => {
+    expect(await reset({ context })).toEqual({ ok: false, error: "forbidden" });
+    expect(mocks.role).toHaveBeenCalledTimes(1);
+    expect(mocks.role).not.toHaveBeenCalledWith("simulate_next_month_reset");
+  });
+  it("allows Super Admin to reset all cardholders through the caller-scoped audited operation", async () => {
+    mocks.role.mockResolvedValueOnce({ data: true, error: null }).mockResolvedValueOnce({ data: { ok: true, count: 3 }, error: null });
+    expect(await reset({ context })).toEqual({ ok: true, count: 3 });
+    expect(mocks.role).toHaveBeenNthCalledWith(2, "simulate_next_month_reset");
+    expect(mocks.admin).not.toHaveBeenCalled();
+  });
+  it("does not report a reset when the operation fails", async () => {
+    mocks.role.mockResolvedValueOnce({ data: true, error: null }).mockResolvedValueOnce({ data: null, error: new Error("failed") });
+    expect(await reset({ context })).toEqual({ ok: false, error: "failed" });
   });
 });

@@ -40,6 +40,14 @@ describe("whitelist and monthly eligibility", () => {
   it("uses India's calendar month at the UTC month boundary", () => {
     expect(monthKey(new Date("2026-11-30T19:00:00Z"))).toBe("2026-12");
   });
+  it("renews eligibility exactly at midnight India time on the 1st", () => {
+    const card = { status: "collected", monthly_status: "Collected", distribution_month: "2026-11" };
+    expect(isCollectedThisMonth(card, new Date("2026-11-30T18:29:59Z"))).toBe(true);
+    expect(isCollectedThisMonth(card, new Date("2026-11-30T18:30:00Z"))).toBe(false);
+  });
+  it("reopens eligibility when an explicit simulation sets the card to Pending", () => {
+    expect(isCollectedThisMonth({ status: "pending", monthly_status: "Pending", distribution_month: "2026-11", collected_at: null }, new Date("2026-11-10T06:00:00Z"))).toBe(false);
+  });
 });
 
 describe("SMS lock rules", () => {
