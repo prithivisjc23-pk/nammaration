@@ -128,12 +128,14 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
     if (!lookup?.found) return;
     let active = true;
     const identifier = search.trim();
-    const timer = setInterval(() => {
+    const refresh = () => {
       void check({ data: { identifier } }).then((result) => {
         if (active) setLookup(result);
       }).catch(() => { if (active) setLookup(null); });
-    }, 2000);
-    return () => { active = false; clearInterval(timer); };
+    };
+    const timer = setInterval(refresh, 2000);
+    window.addEventListener("focus", refresh);
+    return () => { active = false; clearInterval(timer); window.removeEventListener("focus", refresh); };
   }, [lookup?.found, search, check]);
 
   // Cardholders can self-register into this shop: keep the list live.
