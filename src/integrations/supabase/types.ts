@@ -123,6 +123,7 @@ export type Database = {
           morning_close: string
           morning_open: string
           owner_id: string
+          password: string | null
           shop_name: string
           shop_number: string
           status: string
@@ -146,6 +147,7 @@ export type Database = {
           morning_close?: string
           morning_open?: string
           owner_id: string
+          password?: string | null
           shop_name?: string
           shop_number: string
           status?: string
@@ -169,6 +171,7 @@ export type Database = {
           morning_close?: string
           morning_open?: string
           owner_id?: string
+          password?: string | null
           shop_name?: string
           shop_number?: string
           status?: string
