@@ -1,5 +1,9 @@
 # Namma Ration roadmap
 
+## Reset confirmation repair
+- [x] Repair API safe-update rejection using an explicit all-customer predicate
+- [x] Verify Yes, Reset success toast, 16 Pending cardholders across 11 mapped shops, preserved history, and regular-shopkeeper denial; 42 tests passed
+
 ## Monthly renewal and public login cleanup
 - [x] Remove public Super Admin labels while preserving shared login
 - [x] Automatic India-calendar monthly renewal with preserved collection history
