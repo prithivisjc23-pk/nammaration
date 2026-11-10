@@ -23,6 +23,7 @@
 - Collection writes use authenticated RPCs and an immutable ledger unique by card/month/generation and mobile/month/generation; row locks serialize branch distribution and a shared advisory lock serializes global resets against collections. Browser writes cannot change identity, eligibility or generation.
 - Exact cross-shop lookup returns central eligibility, family head, family members and quota only to active shop owners; full registries and unrelated contact/account details remain owner-scoped. Central ledger transactions enforce lockout immediately; checked foreign cards refresh every two seconds and on focus.
 - Monthly eligibility uses Asia/Kolkata dated records; the monthly SQL-only job renews stale customer statuses without deleting history. Admin-only audited simulation advances a shared quota generation for the current month, resets all customers atomically, and preserves duplicate lockout within each generation.
+- Global reset updates explicitly target all customer primary keys with a WHERE predicate because authenticated API sessions enforce safe-update protection; test resets with that protection enabled.
 - Live updates use Realtime on `shops` and `customers`; portal alerts are in-app toasts + browser Notification while the page is open (no push service).
 - `shops.status` (open/lunch/closed) is the source of truth; `is_open` is deprecated and kept in sync by trigger.
 - Theme: `.dark` class on <html>, set before hydration by `THEME_BOOT_SCRIPT`; all colors are tokens with light and dark values in `src/styles.css`.

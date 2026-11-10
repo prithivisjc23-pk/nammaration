@@ -38,4 +38,8 @@ describe("Super Admin exclusive shop management", () => {
     mocks.role.mockResolvedValueOnce({ data: true, error: null }).mockResolvedValueOnce({ data: null, error: new Error("failed") });
     expect(await reset({ context })).toEqual({ ok: false, error: "failed" });
   });
+  it("returns the globally updated cardholder count after a successful reset", async () => {
+    mocks.role.mockResolvedValueOnce({ data: true, error: null }).mockResolvedValueOnce({ data: { ok: true, count: 16, generation: 8 }, error: null });
+    expect(await reset({ context })).toEqual({ ok: true, count: 16 });
+  });
 });

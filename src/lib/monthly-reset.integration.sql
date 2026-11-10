@@ -37,4 +37,19 @@ BEGIN
   IF public.collect_monthly_ration(cid,other_sid)->>'error'<>'already_collected' THEN RAISE EXCEPTION 'New-cycle duplicate improperly allowed'; END IF;
   IF (SELECT count(*) FROM public.ration_collections WHERE customer_id=cid)<>2 THEN RAISE EXCEPTION 'Both generations must remain in history'; END IF;
 END $$;
+-- Match the authenticated API session, including its safe-update protection.
+SELECT set_config('test.expected_reset_count', (SELECT count(*)::text FROM public.customers), true);
+SELECT set_config('request.jwt.claim.sub', (SELECT user_id::text FROM public.user_roles WHERE role='super_admin' LIMIT 1), true);
+SET LOCAL ROLE authenticated;
+LOAD 'safeupdate';
+DO $$
+DECLARE result jsonb;
+BEGIN
+  result := public.simulate_next_month_reset();
+  IF result->>'ok' IS DISTINCT FROM 'true'
+     OR (result->>'count')::bigint <> current_setting('test.expected_reset_count')::bigint THEN
+    RAISE EXCEPTION 'Authenticated global reset failed';
+  END IF;
+END $$;
+RESET ROLE;
 ROLLBACK;
