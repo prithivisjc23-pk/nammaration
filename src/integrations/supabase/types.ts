@@ -108,6 +108,24 @@ export type Database = {
           },
         ]
       }
+      shop_login_attempts: {
+        Row: {
+          failures: number
+          shop_number: string
+          window_start: string
+        }
+        Insert: {
+          failures?: number
+          shop_number: string
+          window_start?: string
+        }
+        Update: {
+          failures?: number
+          shop_number?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       shops: {
         Row: {
           created_at: string
@@ -124,6 +142,7 @@ export type Database = {
           morning_open: string
           owner_id: string
           password: string | null
+          password_hash: string | null
           shop_name: string
           shop_number: string
           status: string
@@ -148,6 +167,7 @@ export type Database = {
           morning_open?: string
           owner_id: string
           password?: string | null
+          password_hash?: string | null
           shop_name?: string
           shop_number: string
           status?: string
@@ -172,6 +192,7 @@ export type Database = {
           morning_open?: string
           owner_id?: string
           password?: string | null
+          password_hash?: string | null
           shop_name?: string
           shop_number?: string
           status?: string
@@ -245,6 +266,10 @@ export type Database = {
       }
       lookup_ration_card: { Args: { _identifier: string }; Returns: Json }
       owns_shop: { Args: { _shop_id: string }; Returns: boolean }
+      verify_shop_credentials: {
+        Args: { _password: string; _shop_number: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
