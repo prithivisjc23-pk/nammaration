@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Button } from "@/components/ui/button";
+import { collectRation, lookupRation, type RationLookup } from "@/lib/distribution.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +33,6 @@ import {
   HistoryDialog,
   RegistryDialog,
   ResetCardPasswordDialog,
-  ResetDialog,
   SmsDispatchDialog,
   type DispatchState,
 } from "./dialogs";
@@ -108,7 +110,11 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [registryOpen, setRegistryOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
+  const [lookup, setLookup] = useState<RationLookup | null>(null);
+  const [lookupBusy, setLookupBusy] = useState(false);
+  const [collectionBusy, setCollectionBusy] = useState(false);
+  const collect = useServerFn(collectRation);
+  const check = useServerFn(lookupRation);
   const [confirmType, setConfirmType] = useState<SmsType | null>(null);
   const [dispatch, setDispatch] = useState<DispatchState | null>(null);
   const [pwFor, setPwFor] = useState<Customer | null>(null);
@@ -144,39 +150,41 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
   }
 
   async function markCollected(c: Customer) {
-    if (c.status === "collected") return;
-    const collectedAt = new Date().toISOString();
-    qc.setQueryData(custKey, (old) =>
-      old?.map((x) => (x.id === c.id ? { ...x, status: "collected", collected_at: collectedAt } : x)),
-    );
-    const { error } = await supabase
-      .from("customers")
-      .update({ status: "collected", collected_at: collectedAt })
-      .eq("id", c.id)
-      .eq("status", "pending");
-    if (error) {
-      toast.error(t("tError"));
-      qc.invalidateQueries({ queryKey: custKey });
-      return;
-    }
-    toast.success(`✅ ${t("tCollected", c.name)}`);
+    await fulfill(c.id, c.name);
   }
 
-  async function monthReset() {
-    const { error } = await supabase
-      .from("customers")
-      .update({ status: "pending", collected_at: null })
-      .eq("shop_id", shop.id)
-      .eq("status", "collected");
-    if (error) {
+  async function fulfill(customerId: string, name?: string) {
+    if (collectionBusy) return;
+    setCollectionBusy(true);
+    try {
+      const result = await collect({ data: { customerId, shopId: shop.id } });
+      if (!result.ok) {
+        if (result.error === "already_collected") {
+          setLookup({ found: true, customer_id: customerId, collected: true });
+          toast.error(t("alreadyCollected"));
+        } else toast.error(t("tError"));
+        return;
+      }
+      setLookup({ found: true, customer_id: customerId, collected: true });
+      await qc.invalidateQueries({ queryKey: custKey });
+      toast.success(name ? t("tCollected", name) : t("collectedBadge"));
+    } catch {
       toast.error(t("tError"));
-      return;
+    } finally {
+      setCollectionBusy(false);
     }
-    qc.setQueryData(custKey, (old) => old?.map((x) => ({ ...x, status: "pending", collected_at: null })));
-    await updateShop({ cycle: monthKey() });
-    void qc.invalidateQueries({ queryKey: custKey });
-    setResetOpen(false);
-    toast.success(`🔄 ${t("tReset")}`);
+  }
+
+  async function checkAcrossShops() {
+    setLookup(null);
+    setLookupBusy(true);
+    try {
+      setLookup(await check({ data: { identifier: search.trim() } }));
+    } catch {
+      toast.error(t("tError"));
+    } finally {
+      setLookupBusy(false);
+    }
   }
 
   function openSms(type: SmsType) {
@@ -274,26 +282,10 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
             📅 <time dateTime={new Date().toISOString().slice(0, 10)}>{today}</time>
           </p>
           <p className="text-xs font-medium text-muted-foreground">
-            {t("cycle")}: <span className="font-bold text-secondary-foreground">{monthLabel(shop.cycle, lang)}</span>
+            {t("cycle")}: <span className="font-bold text-secondary-foreground">{monthLabel(monthKey(), lang)}</span>
             {shop.ward ? ` · ${shop.ward}` : ""}
           </p>
         </div>
-
-        {shop.cycle !== monthKey() && (
-          <div
-            className="flex flex-col gap-2 rounded-xl bg-warning-mid px-4 py-3 text-warning-strong ring-1 ring-warning-border sm:flex-row sm:items-center sm:justify-between"
-            role="alert"
-          >
-            <p className="text-sm font-semibold">📆 {t("newMonthBanner")}</p>
-            <button
-              type="button"
-              onClick={() => setResetOpen(true)}
-              className="shrink-0 rounded-lg bg-warning px-4 py-2 text-sm font-bold text-warning-foreground hover:bg-warning-hover"
-            >
-              🔄 {t("resetMonth")}
-            </button>
-          </div>
-        )}
 
         <CounterGrid counts={counts} />
 
@@ -382,11 +374,23 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                 type="search"
                 autoComplete="off"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setLookup(null); }}
                 placeholder={t("searchPh")}
                 className="w-full rounded-xl border-2 border-border bg-muted py-3 pl-11 pr-4 text-base outline-none focus:border-primary focus:bg-card"
               />
             </div>
+            <Button onClick={checkAcrossShops} disabled={lookupBusy || search.trim().length < 6}>{t("lookupCard")}</Button>
+            <p className="text-xs text-muted-foreground">{t("lookupHint")}</p>
+            {(lookup?.collected || results.some((c) => c.status === "collected")) && (
+              <p role="alert" className="rounded-lg border border-destructive-border bg-destructive-soft p-3 text-base font-extrabold text-destructive-strong">{t("alreadyCollected")}</p>
+            )}
+            {lookup && !lookup.found && <p role="status" className="text-sm text-muted-foreground">{t("noMatch")}</p>}
+            {lookup?.found && !lookup.collected && lookup.customer_id && (
+              <div className="flex flex-col gap-2">
+                {!lookup.own_shop && <p className="text-sm text-warning-strong">{t("crossShopPending")}</p>}
+                <Button disabled={collectionBusy} onClick={() => { if (lookup.customer_id) void fulfill(lookup.customer_id); }}>{t("markCollected")}</Button>
+              </div>
+            )}
             <div className="flex flex-col gap-2" aria-live="polite">
               {search.trim().length < 2 ? (
                 <p className="text-sm text-muted-foreground">{t("searchHint")}</p>
@@ -414,13 +418,6 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                 className="rounded-xl bg-ink px-3 py-3 text-sm font-bold text-ink-foreground shadow-sm hover:bg-ink-3"
               >
                 👥 {t("viewAll")} ({counts.pending}/{counts.total})
-              </button>
-              <button
-                type="button"
-                onClick={() => setResetOpen(true)}
-                className="col-span-2 rounded-xl border-2 border-warning-border bg-warning-soft px-3 py-2.5 text-sm font-bold text-warning-strong hover:bg-warning-mid"
-              >
-                🔄 {t("resetMonth")}
               </button>
             </div>
           </section>
@@ -508,7 +505,6 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
       />
       <ResetCardPasswordDialog customer={pwFor} onClose={() => setPwFor(null)} />
       <HistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} logs={smsLogs} />
-      <ResetDialog open={resetOpen} onOpenChange={setResetOpen} total={counts.total} onConfirm={monthReset} />
       <ConfirmSmsDialog
         type={confirmType}
         pending={counts.pending}

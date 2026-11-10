@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
 import { AppHeader } from "@/components/AppHeader";
 import { statusIcon, statusLabelKey } from "@/components/dashboard/parts";
-import { CROWD_LABEL, STOCK_ITEMS, parseStatus, parseStock, type CrowdLevel, type ShopStatus } from "@/lib/ration";
+import { CROWD_LABEL, STOCK_ITEMS, isCollectedThisMonth, parseStatus, parseStock, type CrowdLevel, type ShopStatus } from "@/lib/ration";
 import { myCardQuery, resolveHome, shopByIdQuery, type Customer } from "@/lib/shop-data";
 import { cn } from "@/lib/utils";
 
@@ -134,7 +134,7 @@ function CardholderView({ card, userId }: { card: Customer; userId: string }) {
 
   const status = shop ? parseStatus(shop.status) : "closed";
   const stock = parseStock(shop?.stock);
-  const collected = card.status === "collected";
+  const collected = isCollectedThisMonth(card);
   const collectedDate = card.collected_at
     ? new Date(card.collected_at).toLocaleDateString(lang === "ta" ? "ta-IN" : "en-IN", { day: "numeric", month: "long" })
     : "";
