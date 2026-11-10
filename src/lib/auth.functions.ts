@@ -13,44 +13,23 @@ export type ShopkeeperLoginResult =
   | { ok: true; access_token: string; refresh_token: string }
   | { ok: false; error: "invalid" | "unconfirmed" };
 
-const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
-
 /**
- * Sign a shopkeeper in with their username, shop number or email.
- * The email lookup happens server-side so emails are never exposed to visitors.
+ * Verify the active shop's hashed password server-side, then exchange a
+ * server-generated one-time token for a real session. Never expose credentials.
  */
 export const signInShopkeeper = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => loginInput.parse(input))
   .handler(async ({ data }): Promise<ShopkeeperLoginResult> => {
     const id = normalizeShopNumber(data.identifier);
     if (!isWhitelistedShop(id)) return { ok: false, error: "invalid" };
-    let email: string | null = null;
-
-    if (id.includes("@")) {
-      email = id.toLowerCase();
-    } else {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const shopNumber = normalizeShopNumber(id);
-      let ownerId: string | null = null;
-
-      const byShop = await supabaseAdmin.from("shops").select("owner_id").eq("shop_number", shopNumber).eq("is_active", true).maybeSingle();
-      ownerId = byShop.data?.owner_id ?? null;
-
-      if (!ownerId) {
-        const byUser = await supabaseAdmin
-          .from("shops")
-          .select("owner_id")
-          .ilike("username", escapeLike(id))
-          .maybeSingle();
-        ownerId = byUser.data?.owner_id ?? null;
-      }
-
-      if (ownerId) {
-        const { data: userData } = await supabaseAdmin.auth.admin.getUserById(ownerId);
-        email = userData.user?.email ?? null;
-      }
-    }
-
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ownerId, error: credentialError } = await supabaseAdmin.rpc("verify_shop_credentials", {
+      _shop_number: id,
+      _password: data.password,
+    });
+    if (credentialError || !ownerId) return { ok: false, error: "invalid" };
+    const { data: userData } = await supabaseAdmin.auth.admin.getUserById(ownerId);
+    const email = userData.user?.email;
     if (!email) return { ok: false, error: "invalid" };
 
     const url = process.env["SUPABASE_URL"]!;
@@ -67,11 +46,15 @@ export const signInShopkeeper = createServerFn({ method: "POST" })
       },
     });
 
-    const { data: auth, error } = await client.auth.signInWithPassword({ email, password: data.password });
+    const { data: link, error: linkError } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
+    if (linkError || link.user?.id !== ownerId || !link.properties?.hashed_token) return { ok: false, error: "invalid" };
+    const { data: auth, error } = await client.auth.verifyOtp({ type: "magiclink", token_hash: link.properties.hashed_token });
     if (error || !auth.session) {
       const unconfirmed = error?.code === "email_not_confirmed" || /not confirmed/i.test(error?.message ?? "");
       return { ok: false, error: unconfirmed ? "unconfirmed" : "invalid" };
     }
+    const { data: shop } = await supabaseAdmin.from("shops").select("owner_id").eq("shop_number", id).eq("is_active", true).maybeSingle();
+    if (auth.user?.id !== ownerId || shop?.owner_id !== ownerId) return { ok: false, error: "invalid" };
     return { ok: true, access_token: auth.session.access_token, refresh_token: auth.session.refresh_token };
   });
 
