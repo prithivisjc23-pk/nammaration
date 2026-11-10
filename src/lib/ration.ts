@@ -73,8 +73,17 @@ export const CROWD_LABEL: Record<CrowdLevel, { en: string; ta: string }> = {
   heavy: { en: "High Crowd", ta: "கூட்டம் அதிகம்" },
 };
 
-export const monthKey = (d = new Date()) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+export const monthKey = (d = new Date()) => {
+  const parts = new Intl.DateTimeFormat("en", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit" }).formatToParts(d);
+  return `${parts.find((p) => p.type === "year")?.value}-${parts.find((p) => p.type === "month")?.value}`;
+};
+
+export const WHITELIST_SHOP_IDS = ["TNV-FPS-001", "TNV-FPS-002", "TNV-FPS-003"] as const;
+export const isWhitelistedShop = (id: string) => (WHITELIST_SHOP_IDS as readonly string[]).includes(normalizeShopNumber(id));
+export function isCollectedThisMonth(c: { status: string; collected_at?: string | null; distribution_month?: string; monthly_status?: string }, now = new Date()) {
+  const cycle = c.distribution_month ?? (c.collected_at ? monthKey(new Date(c.collected_at)) : undefined);
+  return cycle ? cycle === monthKey(now) && (c.monthly_status === "Collected" || c.status === "collected") : c.status === "collected";
+}
 
 export const monthLabel = (key: string, lang: Lang) => {
   const [y = 1970, m = 1] = key.split("-").map(Number);
