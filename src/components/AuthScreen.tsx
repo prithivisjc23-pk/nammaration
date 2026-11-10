@@ -22,6 +22,7 @@ import {
 } from "@/lib/ration";
 import type { I18nKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const inputCls =
   "w-full rounded-xl border border-input bg-card px-3 py-3 text-base text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30";
@@ -175,6 +176,7 @@ function ShopPanel({ className }: { className?: string | undefined }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const login = useServerFn(signInShopkeeper);
+  const [adminLogin, setAdminLogin] = useState(false);
 
   async function handleShopLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -203,12 +205,12 @@ function ShopPanel({ className }: { className?: string | undefined }) {
     <Panel
       className={className}
       icon={<Store className="h-5 w-5" aria-hidden="true" />}
-      title={t("roleShop")}
+      title={t(adminLogin ? "superAdmin" : "roleShop")}
       sub={t("roleShopSub")}
       footer={t("authOnly")}
     >
         <form onSubmit={handleShopLogin} className="flex flex-col gap-4" noValidate>
-          <Field label={t("loginId")}>
+          <Field label={t(adminLogin ? "username" : "loginId")}>
             <input name="loginId" required autoComplete="username" className={inputCls} />
           </Field>
           <Field label={t("password")}>
@@ -217,6 +219,7 @@ function ShopPanel({ className }: { className?: string | undefined }) {
           <ErrorText msg={error} />
           <SubmitButton busy={busy}>{t("loginBtn")}</SubmitButton>
         </form>
+        <Button variant="ghost" className="mt-3" onClick={() => { setAdminLogin(!adminLogin); setError(null); }}>{t(adminLogin ? "roleShop" : "superAdmin")}</Button>
     </Panel>
   );
 }

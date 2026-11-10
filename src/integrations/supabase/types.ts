@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_credentials: {
+        Row: {
+          login_id: string
+          password_hash: string
+          user_id: string
+        }
+        Insert: {
+          login_id: string
+          password_hash: string
+          user_id: string
+        }
+        Update: {
+          login_id?: string
+          password_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           card: string
@@ -22,8 +40,10 @@ export type Database = {
           created_at: string
           distribution_month: string
           district: string | null
+          family_members: Json
           id: string
           mobile: string
+          monthly_quota: Json
           monthly_status: string
           name: string
           shop_id: string
@@ -37,8 +57,10 @@ export type Database = {
           created_at?: string
           distribution_month?: string
           district?: string | null
+          family_members?: Json
           id?: string
           mobile: string
+          monthly_quota?: Json
           monthly_status?: string
           name: string
           shop_id: string
@@ -52,8 +74,10 @@ export type Database = {
           created_at?: string
           distribution_month?: string
           district?: string | null
+          family_members?: Json
           id?: string
           mobile?: string
+          monthly_quota?: Json
           monthly_status?: string
           name?: string
           shop_id?: string
@@ -242,6 +266,24 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -255,6 +297,7 @@ export type Database = {
         Args: { _customer_id: string; _shop_id: string }
         Returns: Json
       }
+      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_shop_customer: { Args: { _shop_id: string }; Returns: boolean }
       list_shops_public: {
         Args: never
@@ -266,6 +309,23 @@ export type Database = {
       }
       lookup_ration_card: { Args: { _identifier: string }; Returns: Json }
       owns_shop: { Args: { _shop_id: string }; Returns: boolean }
+      provision_shop: {
+        Args: {
+          _district: string
+          _mobile: string
+          _owner_id: string
+          _password: string
+          _shop_name: string
+          _shop_number: string
+          _taluk: string
+          _ward: string
+        }
+        Returns: string
+      }
+      set_admin_credential: {
+        Args: { _login_id: string; _password: string; _user_id: string }
+        Returns: undefined
+      }
       verify_shop_credentials: {
         Args: { _password: string; _shop_number: string }
         Returns: string

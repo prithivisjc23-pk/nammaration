@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { isWhitelistedShop, normalizeShopNumber } from "./ration";
+import { normalizeShopNumber } from "./ration";
 
 const loginInput = z.object({
   identifier: z.string().trim().min(1).max(254),
@@ -21,7 +21,6 @@ export const signInShopkeeper = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => loginInput.parse(input))
   .handler(async ({ data }): Promise<ShopkeeperLoginResult> => {
     const id = normalizeShopNumber(data.identifier);
-    if (!isWhitelistedShop(id)) return { ok: false, error: "invalid" };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: ownerId, error: credentialError } = await supabaseAdmin.rpc("verify_shop_credentials", {
       _shop_number: id,
@@ -54,7 +53,8 @@ export const signInShopkeeper = createServerFn({ method: "POST" })
       return { ok: false, error: unconfirmed ? "unconfirmed" : "invalid" };
     }
     const { data: shop } = await supabaseAdmin.from("shops").select("owner_id").eq("shop_number", id).eq("is_active", true).maybeSingle();
-    if (auth.user?.id !== ownerId || shop?.owner_id !== ownerId) return { ok: false, error: "invalid" };
+    const { data: admin } = await supabaseAdmin.rpc("has_role", { _user_id: ownerId, _role: "super_admin" });
+    if (auth.user?.id !== ownerId || (shop?.owner_id !== ownerId && !admin)) return { ok: false, error: "invalid" };
     return { ok: true, access_token: auth.session.access_token, refresh_token: auth.session.refresh_token };
   });
 

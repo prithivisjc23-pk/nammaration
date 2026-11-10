@@ -14,7 +14,7 @@ const login = signInShopkeeper as unknown as (input: { data: { identifier: strin
 describe("shop-table login", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mocks.rpc.mockResolvedValue({ data: "owner", error: null });
+    mocks.rpc.mockImplementation((name: string) => Promise.resolve({ data: name === "has_role" ? false : "owner", error: null }));
     mocks.user.mockResolvedValue({ data: { user: { email: "internal@example.test" } } });
     mocks.link.mockResolvedValue({ data: { user: { id: "owner" }, properties: { hashed_token: "one-time" } } });
     mocks.verify.mockResolvedValue({ data: { user: { id: "owner" }, session: { access_token: "access", refresh_token: "refresh" } } });
@@ -24,9 +24,14 @@ describe("shop-table login", () => {
     expect(await login({ data: { identifier, password: "test-input" } })).toEqual({ ok: true, access_token: "access", refresh_token: "refresh" });
     expect(mocks.rpc).toHaveBeenCalledWith("verify_shop_credentials", { _shop_number: identifier, _password: "test-input" });
   });
-  it("rejects unapproved TNV-FPS-004 without issuing a token", async () => {
-    expect(await login({ data: { identifier: "TNV-FPS-004", password: "test-input" } })).toEqual({ ok: false, error: "invalid" });
-    expect(mocks.rpc).not.toHaveBeenCalled();
+  it("allows a dynamically provisioned TNV-FPS-004 after credential verification", async () => {
+    expect(await login({ data: { identifier: "TNV-FPS-004", password: "test-input" } })).toEqual({ ok: true, access_token: "access", refresh_token: "refresh" });
+    expect(mocks.rpc).toHaveBeenCalledWith("verify_shop_credentials", { _shop_number: "TNV-FPS-004", _password: "test-input" });
+  });
+  it("allows SUPER-ADMIN-2319 only when its protected role is verified", async () => {
+    mocks.shop.mockResolvedValue({ data: null });
+    mocks.rpc.mockImplementation((name: string) => Promise.resolve({ data: name === "has_role" ? true : "owner" }));
+    expect((await login({ data: { identifier: "SUPER-ADMIN-2319", password: "test-input" } })).ok).toBe(true);
   });
   it("rejects an incorrect shop-table password", async () => {
     mocks.rpc.mockResolvedValue({ data: null });

@@ -57,7 +57,9 @@ export const smsLogsQuery = (shopId: string) =>
   });
 
 /** Where a signed-in user belongs: shop owners go to the dashboard, cardholders to their portal. */
-export async function resolveHome(userId: string): Promise<"/dashboard" | "/portal" | null> {
+export async function resolveHome(userId: string): Promise<"/dashboard" | "/portal" | "/manage-shops" | null> {
+  const { data: admin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+  if (admin) return "/manage-shops";
   const [{ data: shop }, { data: card }] = await Promise.all([
     supabase.from("shops").select("id").eq("owner_id", userId).maybeSingle(),
     supabase.from("customers").select("id").eq("user_id", userId).maybeSingle(),

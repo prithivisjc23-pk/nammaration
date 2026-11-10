@@ -1,5 +1,11 @@
 # Namma Ration roadmap
 
+## Dynamic ONORC shop management
+- [x] Secure Super Admin account and exclusive Manage Shops screen
+- [x] Dynamic authenticated shop provisioning and district signup mapping
+- [x] Global family/quota record and live cross-shop monthly lock (no invented quota amounts)
+- [x] Verify admin, regular shop denial, dynamic signup, and cross-shop collection; temporary records removed
+
 ## Done — migration
 - [x] Database: shops, customers, SMS history with owner-only access
 - [x] Shopkeeper sign-in / register shop + password reset
@@ -43,4 +49,4 @@
 - [x] Preload three Tirunelveli shops and restrict shopkeeper access
 - [x] District-based customer mapping to active shops (implemented previously)
 - [x] Atomic monthly collection ledger and cross-branch duplicate warnings (implemented previously)
-- Earlier signup and cross-shop collection checks were not performed; this login repair verifies owner sign-in and dashboard refresh only.
+- Dynamic ONORC verification now covers signup, shop mapping, cross-shop collection, portal readback and duplicate lockout.

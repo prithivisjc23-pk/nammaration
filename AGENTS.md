@@ -13,15 +13,15 @@
 
 - Pure business rules (validation, SMS lock, message text, search, counters) live in `src/lib/ration.ts` with tests in `src/lib/ration.test.ts`; UI imports them so rules stay testable.
 - All UI text goes through `src/lib/i18n.ts` (en + ta) via `useLang()`; never hardcode user-facing strings in one language.
-- Shop accounts are provisioned through trusted administrative tools, never public registration; sign-in and owner RLS both enforce active whitelisted shop access so stale sessions cannot bypass restrictions.
+- Shop accounts are provisioned by authenticated Super Admin server functions, never public registration; sign-in and owner RLS require active shop rows rather than a static ID allowlist so dynamic shops share the same security boundary.
 - Shop lifecycle metadata never creates shop rows; trusted provisioning links each preloaded row to its confirmed auth account to prevent self-granted shop access.
 - Shopkeeper login verifies server-only hashed shop-table credentials with a throttled RPC, then exchanges an admin-generated one-time token for an owner session; browser shop reads explicitly exclude credential columns to preserve RLS without exposing hashes.
-- Two roles derived from data, not a roles table: a shop owner (`shops.owner_id`) uses /dashboard, a cardholder (`customers.user_id`) uses /portal; `resolveHome` routes after sign-in.
+- Super Admin and shopkeeper role assignments live in protected `user_roles`; admin server functions verify roles through the caller-scoped client before privileged work. Cardholder identity remains mapped by `customers.user_id`; `resolveHome` sends admins to /manage-shops, owners to /dashboard, cardholders to /portal.
 - RLS: shop owners see their shop, customers and SMS history (`owns_shop`); cardholders see only their own card row and their shop (`is_shop_customer`). `customers.user_id` can only be set by service-role code (trigger), so owners cannot grant portal access.
 - Cardholders sign in with a synthetic email derived from the Smart Card number (`cardholderEmail`); accounts are created confirmed by the `registerCardholder` server function, and shopkeepers reset portal passwords via `resetCardholderPassword`.
 - Card number and mobile are each globally unique on `customers` (1 card ↔ 1 mobile).
 - Collection writes use authenticated RPCs and an immutable monthly ledger with unique card/month and mobile/month constraints; row locks serialize concurrent branch distribution, and browser writes cannot change eligibility or identity.
-- Cross-shop lookup returns eligibility and an opaque customer ID only after shop ownership checks; unrelated personal details remain hidden.
+- Exact cross-shop lookup returns central eligibility, family head, family members and quota only to active shop owners; full registries and unrelated contact/account details remain owner-scoped. Central ledger transactions enforce lockout immediately; checked foreign cards refresh every two seconds and on focus.
 - Monthly eligibility uses the Asia/Kolkata calendar and dated records, not destructive resets, so previous collection history remains auditable.
 - Live updates use Realtime on `shops` and `customers`; portal alerts are in-app toasts + browser Notification while the page is open (no push service).
 - `shops.status` (open/lunch/closed) is the source of truth; `is_open` is deprecated and kept in sync by trigger.
