@@ -1,5 +1,11 @@
 # Namma Ration roadmap
 
+## Dynamic ONORC shop management
+- [ ] Secure Super Admin account and exclusive Manage Shops screen
+- [ ] Dynamic authenticated shop provisioning and district signup mapping
+- [ ] Global family/quota record and live cross-shop monthly lock
+- [ ] Verify admin, regular shop denial, dynamic signup, and cross-shop collection
+
 ## Done — migration
 - [x] Database: shops, customers, SMS history with owner-only access
 - [x] Shopkeeper sign-in / register shop + password reset
