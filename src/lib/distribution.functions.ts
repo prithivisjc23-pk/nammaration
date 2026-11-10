@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type RationLookup = { found: boolean; customer_id?: string; collected?: boolean; own_shop?: boolean };
+export type RationLookup = { found: boolean; customer_id?: string; collected?: boolean; own_shop?: boolean; name?: string; family_members?: unknown; monthly_quota?: unknown };
 export const lookupRation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ identifier: z.string().trim().min(6).max(40) }).parse(input))

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { compareShopIds, isDistrict, nextShopId, WHITELIST_SHOP_IDS } from "./ration";
+import { compareShopIds, isDistrict, nextShopId } from "./ration";
 
 const districtInput = z.object({ district: z.string().max(40) });
 
@@ -26,7 +26,6 @@ export const listDistrictShops = createServerFn({ method: "POST" })
       .select("shop_number, shop_name, taluk, ward")
       .eq("district", data.district)
       .eq("is_active", true)
-      .in("shop_number", [...WHITELIST_SHOP_IDS])
       .limit(2000);
     if (error) throw new Error(error.message);
     return (rows ?? []).sort((a, b) => compareShopIds(a.shop_number, b.shop_number));

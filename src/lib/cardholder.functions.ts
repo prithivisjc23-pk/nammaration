@@ -3,7 +3,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   DISTRICTS,
-  isWhitelistedShop,
   cardholderEmail,
   isValidCard,
   isValidMobile,
@@ -51,7 +50,6 @@ export const registerCardholder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const cardNorm = normCard(card);
 
-    if (!isWhitelistedShop(data.shopCode)) return { ok: false, error: "invalid_shop" };
     const { data: shop } = await supabaseAdmin
       .from("shops")
       .select("id")

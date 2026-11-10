@@ -48,7 +48,7 @@ export function Dashboard({ userId }: { userId: string }) {
   useEffect(() => {
     if (shopQ.isSuccess && !shopQ.data) {
       void resolveHome(userId).then((home) => {
-        if (home === "/portal") navigate({ to: "/portal", replace: true });
+        if (home === "/portal" || home === "/manage-shops") navigate({ to: home, replace: true });
       });
     }
   }, [shopQ.isSuccess, shopQ.data, userId, navigate]);
@@ -122,6 +122,19 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
 
   const shopKey = shopQuery(userId).queryKey;
   const custKey = customersQuery(shop.id).queryKey;
+
+  // Refresh the currently checked central card without exposing other shops' registries.
+  useEffect(() => {
+    if (!lookup?.found) return;
+    let active = true;
+    const identifier = search.trim();
+    const timer = setInterval(() => {
+      void check({ data: { identifier } }).then((result) => {
+        if (active) setLookup(result);
+      }).catch(() => { if (active) setLookup(null); });
+    }, 2000);
+    return () => { active = false; clearInterval(timer); };
+  }, [lookup?.found, search, check]);
 
   // Cardholders can self-register into this shop: keep the list live.
   useEffect(() => {
@@ -387,6 +400,9 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
             {lookup && !lookup.found && <p role="status" className="text-sm text-muted-foreground">{t("noMatch")}</p>}
             {lookup?.found && !lookup.collected && lookup.customer_id && (
               <div className="flex flex-col gap-2">
+                <p className="font-semibold">{lookup.name}</p>
+                <p className="text-sm text-muted-foreground">{t("familyDetails")}: {Array.isArray(lookup.family_members) ? lookup.family_members.map((m) => typeof m === "string" ? m : typeof m === "object" && m && "name" in m ? String(m.name) : "").filter(Boolean).join(", ") || "—" : "—"}</p>
+                <p className="text-sm text-muted-foreground">{t("monthlyQuota")}: {lookup.monthly_quota && typeof lookup.monthly_quota === "object" && Object.keys(lookup.monthly_quota).length ? Object.entries(lookup.monthly_quota).map(([k,v]) => `${k}: ${String(v)}`).join(" · ") : t("noQuota")}</p>
                 {!lookup.own_shop && <p className="text-sm text-warning-strong">{t("crossShopPending")}</p>}
                 <Button disabled={collectionBusy} onClick={() => { if (lookup.customer_id) void fulfill(lookup.customer_id); }}>{t("markCollected")}</Button>
               </div>

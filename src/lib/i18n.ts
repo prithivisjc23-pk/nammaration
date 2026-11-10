@@ -88,7 +88,8 @@ const en = {
   nTimings: "Shop timings updated", live: "Live", shopContact: "Shop contact", helpTitle: "Help & Support", helpline: "Grievance Helpline", helpTiming: "Timing", raiseComplaint: "Raise Complaint", complaintSoon: "Complaint service coming soon. Please call the helpline.", portalTitle: "Cardholder Portal",
   portalLinked: "📲 Portal", resetPortalPw: "Reset portal password", newPwFor: (n: string) => `New portal password for ${n}`,
   tPwReset: "Password updated. Tell the cardholder their new password.", savePassword: "Save password",
-  alreadyCollected: "Already Collected for this Month", lookupCard: "Check Across Shops", crossShopPending: "Pending at another shop — eligible for collection here.", lookupHint: "Enter the complete card ID or registered phone number for a cross-shop check.",
+  alreadyCollected: "Quota Already Collected for this Month", lookupCard: "Check Across Shops", crossShopPending: "Pending at another shop — eligible for collection here.", lookupHint: "Enter the complete card ID or registered phone number for a cross-shop check.",
+  superAdmin: "Super Admin", manageShops: "Manage Shops", addShop: "Add Shop", activeShop: "Active", adminDenied: "Only the Super Admin can manage shops.", shopCreated: "Shop created. The shopkeeper can now sign in with its Shop ID.", familyDetails: "Family Details", monthlyQuota: "Monthly Quota", noQuota: "Quota details have not been assigned.",
   themeToggle: "Toggle dark mode",
 } satisfies Record<string, Entry>;
 
@@ -180,7 +181,8 @@ const ta: Dict = {
   nTimings: "கடை நேரம் புதுப்பிக்கப்பட்டது", live: "நேரடி", shopContact: "கடை தொடர்பு", helpTitle: "உதவி & ஆதரவு", helpline: "குறைதீர் உதவி எண்", helpTiming: "நேரம்", raiseComplaint: "புகார் அளிக்க", complaintSoon: "புகார் சேவை விரைவில் வரும். உதவி எண்ணை அழைக்கவும்.", portalTitle: "அட்டைதாரர் பக்கம்",
   portalLinked: "📲 கணக்கு", resetPortalPw: "கடவுச்சொல்லை மீட்டமை", newPwFor: (n: string) => `${n} க்கான புதிய கடவுச்சொல்`,
   tPwReset: "கடவுச்சொல் மாற்றப்பட்டது. அட்டைதாரரிடம் புதிய கடவுச்சொல்லைத் தெரிவிக்கவும்.", savePassword: "கடவுச்சொல்லைச் சேமி",
-  alreadyCollected: "இந்த மாதம் ஏற்கனவே வாங்கியாயிற்று", lookupCard: "அனைத்து கடைகளிலும் சரிபார்", crossShopPending: "வேறு கடையில் பதிவு உள்ளது — இங்கு வாங்கத் தகுதியுள்ளது.", lookupHint: "முழு அட்டை எண் அல்லது பதிவு செய்த கைபேசி எண்ணை உள்ளிடவும்.",
+  alreadyCollected: "இந்த மாத ஒதுக்கீடு ஏற்கனவே வாங்கியாயிற்று", lookupCard: "அனைத்து கடைகளிலும் சரிபார்", crossShopPending: "வேறு கடையில் பதிவு உள்ளது — இங்கு வாங்கத் தகுதியுள்ளது.", lookupHint: "முழு அட்டை எண் அல்லது பதிவு செய்த கைபேசி எண்ணை உள்ளிடவும்.",
+  superAdmin: "முதன்மை நிர்வாகி", manageShops: "கடைகளை நிர்வகி", addShop: "கடை சேர்", activeShop: "செயலில்", adminDenied: "முதன்மை நிர்வாகிக்கு மட்டுமே கடைகளை நிர்வகிக்க அனுமதி.", shopCreated: "கடை உருவாக்கப்பட்டது. கடை எண்ணைப் பயன்படுத்தி உரிமையாளர் உள்நுழையலாம்.", familyDetails: "குடும்ப விவரங்கள்", monthlyQuota: "மாத ஒதுக்கீடு", noQuota: "ஒதுக்கீட்டு விவரங்கள் இன்னும் வழங்கப்படவில்லை.",
   themeToggle: "இருள் / ஒளி முறை",
 };
 
