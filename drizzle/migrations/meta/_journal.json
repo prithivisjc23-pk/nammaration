@@ -50,6 +50,13 @@
       "when": 1794300214332,
       "tag": "0006_audited_monthly_quota_renewal",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794300272642,
+      "tag": "0007_enable_monthly_scheduler",
+      "breakpoints": true
     }
   ]
 }
