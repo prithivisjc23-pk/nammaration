@@ -418,9 +418,9 @@ function ShopDashboard({ shop, userId }: { shop: Shop; userId: string }) {
                     <CustomerRow key={c.id} customer={c} onCollect={markCollected} />
                   ))}
                 </ul>
-              ) : (
+              ) : !lookup?.found ? (
                 <p className="rounded-xl bg-muted px-3 py-3 text-sm text-muted-foreground">{t("noMatch")}</p>
-              )}
+              ) : null}
             </div>
             <div className="mt-auto grid grid-cols-2 gap-2">
               <button
