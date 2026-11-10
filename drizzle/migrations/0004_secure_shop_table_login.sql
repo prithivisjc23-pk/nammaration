@@ -1,0 +1,23 @@
+ALTER TABLE public.shops ADD COLUMN IF NOT EXISTS password_hash text;
+UPDATE public.shops SET password_hash=extensions.crypt(password, extensions.gen_salt('bf', 10)), password=NULL WHERE password IS NOT NULL AND password_hash IS NULL;
+COMMENT ON COLUMN public.shops.password IS 'DEPRECATED: credentials are stored as a server-only password_hash';
+REVOKE SELECT, INSERT, UPDATE ON public.shops FROM anon, authenticated;
+GRANT SELECT (id,owner_id,shop_number,district,taluk,ward,username,is_open,crowd,stock,cycle,created_at,updated_at,shop_name,mobile,status,morning_open,morning_close,evening_open,evening_close,is_active) ON public.shops TO authenticated;
+GRANT UPDATE (status,crowd,stock,cycle,is_open,morning_open,morning_close,evening_open,evening_close) ON public.shops TO authenticated;
+GRANT ALL ON public.shops TO service_role;
+CREATE OR REPLACE FUNCTION public.shops_protect_identity() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$ BEGIN IF current_user <> 'service_role' THEN NEW.owner_id:=OLD.owner_id; NEW.shop_number:=OLD.shop_number; NEW.username:=OLD.username; NEW.created_at:=OLD.created_at; NEW.is_active:=OLD.is_active; NEW.password:=OLD.password; NEW.password_hash:=OLD.password_hash; END IF; NEW.updated_at:=now(); RETURN NEW; END $$;
+CREATE TABLE public.shop_login_attempts (shop_number text PRIMARY KEY, failures integer NOT NULL DEFAULT 0, window_start timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.shop_login_attempts TO service_role;
+ALTER TABLE public.shop_login_attempts ENABLE ROW LEVEL SECURITY;
+CREATE FUNCTION public.verify_shop_credentials(_shop_number text, _password text) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,extensions AS $$ DECLARE shop public.shops; attempts public.shop_login_attempts; BEGIN
+IF _shop_number NOT IN ('TNV-FPS-001','TNV-FPS-002','TNV-FPS-003') OR length(_password)>200 THEN RETURN NULL; END IF;
+INSERT INTO public.shop_login_attempts(shop_number) VALUES (_shop_number) ON CONFLICT DO NOTHING;
+SELECT * INTO attempts FROM public.shop_login_attempts WHERE shop_number=_shop_number FOR UPDATE;
+IF attempts.window_start < now()-interval '5 minutes' THEN UPDATE public.shop_login_attempts SET failures=0,window_start=now() WHERE shop_number=_shop_number; attempts.failures:=0; END IF;
+IF attempts.failures>=10 THEN RETURN NULL; END IF;
+SELECT * INTO shop FROM public.shops WHERE shop_number=_shop_number AND is_active;
+IF shop.password_hash IS NOT NULL AND extensions.crypt(_password,shop.password_hash)=shop.password_hash THEN UPDATE public.shop_login_attempts SET failures=0 WHERE shop_number=_shop_number; RETURN shop.owner_id; END IF;
+UPDATE public.shop_login_attempts SET failures=failures+1 WHERE shop_number=_shop_number; RETURN NULL;
+END $$;
+REVOKE ALL ON FUNCTION public.verify_shop_credentials(text,text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.verify_shop_credentials(text,text) TO service_role;

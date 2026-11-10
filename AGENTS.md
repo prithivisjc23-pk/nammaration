@@ -15,6 +15,7 @@
 - All UI text goes through `src/lib/i18n.ts` (en + ta) via `useLang()`; never hardcode user-facing strings in one language.
 - Shop accounts are provisioned through trusted administrative tools, never public registration; sign-in and owner RLS both enforce active whitelisted shop access so stale sessions cannot bypass restrictions.
 - Shop lifecycle metadata never creates shop rows; trusted provisioning links each preloaded row to its confirmed auth account to prevent self-granted shop access.
+- Shopkeeper login verifies server-only hashed shop-table credentials with a throttled RPC, then exchanges an admin-generated one-time token for an owner session; browser shop reads explicitly exclude credential columns to preserve RLS without exposing hashes.
 - Two roles derived from data, not a roles table: a shop owner (`shops.owner_id`) uses /dashboard, a cardholder (`customers.user_id`) uses /portal; `resolveHome` routes after sign-in.
 - RLS: shop owners see their shop, customers and SMS history (`owns_shop`); cardholders see only their own card row and their shop (`is_shop_customer`). `customers.user_id` can only be set by service-role code (trigger), so owners cannot grant portal access.
 - Cardholders sign in with a synthetic email derived from the Smart Card number (`cardholderEmail`); accounts are created confirmed by the `registerCardholder` server function, and shopkeepers reset portal passwords via `resetCardholderPassword`.

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { listDistrictShops, previewShopId } from "./shops.functions";
 
-export type Shop = Tables<"shops">;
+export type Shop = Omit<Tables<"shops">, "password" | "password_hash">;
 export type Customer = Tables<"customers">;
 export type SmsLog = Pick<Tables<"sms_logs">, "id" | "type" | "recipient_count" | "created_at">;
 
@@ -12,7 +12,7 @@ export const shopQuery = (userId: string) =>
   queryOptions({
     queryKey: ["shop", userId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("shops").select("*").eq("owner_id", userId).maybeSingle();
+      const { data, error } = await supabase.from("shops").select("id,owner_id,shop_number,district,taluk,ward,username,is_open,crowd,stock,cycle,created_at,updated_at,shop_name,mobile,status,morning_open,morning_close,evening_open,evening_close,is_active").eq("owner_id", userId).maybeSingle();
       if (error) throw error;
       return data;
     },
