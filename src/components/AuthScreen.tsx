@@ -6,9 +6,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLang } from "@/hooks/use-lang";
 import { LangToggle, ThemeToggle } from "@/components/LangToggle";
-import { registerShopkeeper, signInShopkeeper, type ShopkeeperRegisterError } from "@/lib/auth.functions";
+import { signInShopkeeper } from "@/lib/auth.functions";
 import { registerCardholder, type CardholderRegisterError } from "@/lib/cardholder.functions";
-import { districtShopsQuery, resolveHome, shopIdPreviewQuery } from "@/lib/shop-data";
+import { districtShopsQuery, resolveHome } from "@/lib/shop-data";
 import { toast } from "sonner";
 import {
   DISTRICTS,
@@ -17,7 +17,6 @@ import {
   checkNewPassword,
   isValidCard,
   isValidMobile,
-  isValidUsername,
   normalizeCard,
   normalizeMobile,
 } from "@/lib/ration";
@@ -26,8 +25,6 @@ import { cn } from "@/lib/utils";
 
 const inputCls =
   "w-full rounded-xl border border-input bg-card px-3 py-3 text-base text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/30";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Role = "shop" | "card";
 type Tab = "login" | "register" | "forgot";
@@ -40,13 +37,6 @@ const CARD_ERRORS: Record<CardholderRegisterError, I18nKey> = {
   card_other_shop: "eCardOtherShop",
   mobile_mismatch: "eMobileMismatch",
   mobile_taken: "eDupMobile",
-  failed: "eGeneric",
-};
-
-const SHOP_ERRORS: Record<ShopkeeperRegisterError, I18nKey> = {
-  invalid: "eRequired",
-  username_taken: "eUserExists",
-  weak_password: "ePassWeak",
   failed: "eGeneric",
 };
 
@@ -182,20 +172,9 @@ function PanelTabs({
 
 function ShopPanel({ className }: { className?: string | undefined }) {
   const { t } = useLang();
-  const [tab, setTab] = useState<Tab>("login");
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [shopDistrict, setShopDistrict] = useState("");
-  const shopIdQ = useQuery(shopIdPreviewQuery(shopDistrict));
   const login = useServerFn(signInShopkeeper);
-  const registerShop = useServerFn(registerShopkeeper);
-
-  const switchTab = (next: Tab) => {
-    setTab(next);
-    setError(null);
-    setInfo(null);
-  };
 
   async function handleShopLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -220,62 +199,6 @@ function ShopPanel({ className }: { className?: string | undefined }) {
     }
   }
 
-  async function handleShopRegister(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    const shopName = String(f.get("shopName") ?? "").trim().replace(/\s+/g, " ");
-    const district = String(f.get("district") ?? "");
-    const taluk = String(f.get("taluk") ?? "").trim();
-    const ward = String(f.get("ward") ?? "").trim();
-    const mobile = normalizeMobile(String(f.get("mobile") ?? ""));
-    const username = String(f.get("username") ?? "").trim();
-    const password = String(f.get("password") ?? "");
-    const confirm = String(f.get("confirm") ?? "");
-    if (!shopName || !district || !mobile || !username || !password) return setError(t("eRequired"));
-    if (!(DISTRICTS as readonly string[]).includes(district)) return setError(t("eRequired"));
-    if (!isValidMobile(mobile)) return setError(t("eMobile"));
-    if (!isValidUsername(username)) return setError(t("eUsername"));
-    const pwIssue = checkNewPassword(password, confirm);
-    if (pwIssue) return setError(t(pwIssue === "short" ? "ePass" : "ePassMismatch"));
-
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await registerShop({
-        data: { shopName: shopName.slice(0, 80), district, taluk, ward, mobile, username, password },
-      });
-      if (!res.ok) return setError(t(SHOP_ERRORS[res.error]));
-      const shopNumber = res.shopNumber;
-      toast.success(t("tShopCreated", shopNumber), { duration: 10000 });
-      // Account is created ready to use — sign straight in.
-      const session = await login({ data: { identifier: shopNumber, password } });
-      if (!session.ok) {
-        setTab("login");
-        return setError(t("eGeneric"));
-      }
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
-      });
-      if (sessionError) setError(t("eGeneric"));
-    } catch {
-      setError(t("eGeneric"));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleForgot(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const email = String(new FormData(e.currentTarget).get("email") ?? "").trim().toLowerCase();
-    if (!EMAIL_RE.test(email)) return setError(t("eEmail"));
-    setBusy(true);
-    setError(null);
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
-    setBusy(false);
-    setInfo(t("resetSent"));
-  }
-
   return (
     <Panel
       className={className}
@@ -284,15 +207,6 @@ function ShopPanel({ className }: { className?: string | undefined }) {
       sub={t("roleShopSub")}
       footer={t("authOnly")}
     >
-      {tab !== "forgot" && <PanelTabs tab={tab} onChange={switchTab} registerLabel={t("registerShop")} />}
-
-      {info && (
-        <div className="mb-4 rounded-xl bg-secondary px-4 py-3 text-sm text-secondary-foreground ring-1 ring-border" role="status">
-          <p>📧 {info}</p>
-        </div>
-      )}
-
-      {tab === "login" && (
         <form onSubmit={handleShopLogin} className="flex flex-col gap-4" noValidate>
           <Field label={t("loginId")}>
             <input name="loginId" required autoComplete="username" className={inputCls} />
@@ -302,73 +216,7 @@ function ShopPanel({ className }: { className?: string | undefined }) {
           </Field>
           <ErrorText msg={error} />
           <SubmitButton busy={busy}>{t("loginBtn")}</SubmitButton>
-          <button
-            type="button"
-            onClick={() => switchTab("forgot")}
-            className="text-center text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline"
-          >
-            {t("forgot")}
-          </button>
         </form>
-      )}
-
-      {tab === "register" && (
-        <form onSubmit={handleShopRegister} className="flex flex-col gap-4" noValidate>
-          <Field label={t("shopName")}>
-            <input name="shopName" required maxLength={80} autoComplete="organization" className={inputCls} />
-          </Field>
-          <Field label={t("area")}>
-            <DistrictSelect value={shopDistrict} onChange={setShopDistrict} />
-          </Field>
-          <Field label={t("shopIdAuto")}>
-            <div
-              className={cn(inputCls, "bg-muted font-mono font-bold tracking-wider", !shopDistrict && "font-sans font-normal tracking-normal text-muted-foreground")}
-              aria-live="polite"
-            >
-              {!shopDistrict ? t("shopIdPick") : shopIdQ.data?.shopId ?? "…"}
-            </div>
-            {shopDistrict && shopIdQ.data?.shopId && <span className="text-xs text-muted-foreground">{t("shopIdNote")}</span>}
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={t("talukOpt")}>
-              <input name="taluk" autoComplete="off" className={inputCls} />
-            </Field>
-            <Field label={t("wardOpt")}>
-              <input name="ward" autoComplete="off" className={inputCls} />
-            </Field>
-          </div>
-          <Field label={t("shopMobile")}>
-            <MobileInput />
-          </Field>
-          <Field label={t("username")}>
-            <input name="username" required autoComplete="username" className={inputCls} />
-          </Field>
-          <NewPasswordFields />
-          <ErrorText msg={error} />
-          <SubmitButton busy={busy}>{t("createShop")}</SubmitButton>
-        </form>
-      )}
-
-      {tab === "forgot" && (
-        <form onSubmit={handleForgot} className="flex flex-col gap-4" noValidate>
-          <div>
-            <h3 className="text-base font-bold text-foreground">{t("forgotTitle")}</h3>
-            <p className="text-sm text-muted-foreground">{t("forgotSub")}</p>
-          </div>
-          <Field label={t("email")}>
-            <input name="email" type="email" required autoComplete="email" className={inputCls} />
-          </Field>
-          <ErrorText msg={error} />
-          <SubmitButton busy={busy}>{t("sendReset")}</SubmitButton>
-          <button
-            type="button"
-            onClick={() => switchTab("login")}
-            className="text-center text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline"
-          >
-            ← {t("backToLogin")}
-          </button>
-        </form>
-      )}
     </Panel>
   );
 }
