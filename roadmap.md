@@ -1,5 +1,11 @@
 # Namma Ration roadmap
 
+## Monthly renewal and public login cleanup
+- [x] Remove public Super Admin labels while preserving shared login
+- [x] Automatic India-calendar monthly renewal with preserved collection history
+- [x] Admin-only confirmed simulation reset and global cross-shop synchronization
+- [x] Verify shared admin login, phone confirmation, regular-shop restrictions; transactional reset, repeat collection lock and history retention checks passed without changing live records
+
 ## Dynamic ONORC shop management
 - [x] Secure Super Admin account and exclusive Manage Shops screen
 - [x] Dynamic authenticated shop provisioning and district signup mapping

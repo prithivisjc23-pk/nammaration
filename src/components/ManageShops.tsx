@@ -2,9 +2,9 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Store } from "lucide-react";
+import { Plus, RotateCcw, Store } from "lucide-react";
 import { toast } from "sonner";
-import { listManagedShops, createManagedShop } from "@/lib/admin.functions";
+import { listManagedShops, createManagedShop, simulateNextMonthReset } from "@/lib/admin.functions";
 import { DISTRICTS, checkNewPassword } from "@/lib/ration";
 import { useLang } from "@/hooks/use-lang";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,16 +12,30 @@ import { AppHeader } from "./AppHeader";
 import { Field, NewPasswordFields } from "./AuthScreen";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel } from "./ui/alert-dialog";
 
 export function ManageShops() {
   const { t } = useLang();
   const list = useServerFn(listManagedShops);
   const create = useServerFn(createManagedShop);
+  const reset = useServerFn(simulateNextMonthReset);
   const qc = useQueryClient();
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ["managed-shops"], queryFn: () => list(), refetchInterval: 10000 });
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
+  async function simulateReset() {
+    setResetBusy(true);
+    try {
+      const result = await reset();
+      if (!result.ok) { toast.error(t(result.error === "forbidden" ? "adminDenied" : "eGeneric")); return; }
+      setResetOpen(false);
+      await qc.invalidateQueries();
+      toast.success(t("simulateResetDone", result.count ?? 0));
+    } catch { toast.error(t("eGeneric")); } finally { setResetBusy(false); }
+  }
   async function logout() { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); await navigate({ to: "/auth" }); }
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,7 +55,10 @@ export function ManageShops() {
     <AppHeader title={t("manageShops")} subtitle={t("superAdmin")} onLogout={logout} />
     <main className="mx-auto max-w-5xl px-4 py-5">
       {query.isPending ? <p>{t("loading")}</p> : query.isError ? <p role="alert">{t("eGeneric")}</p> : !query.data.allowed ? <p role="alert" className="text-destructive-strong">{t("adminDenied")}</p> : <>
-        <div className="mb-5 flex items-center justify-between gap-3"><h1 className="text-xl font-bold">{t("manageShops")} ({query.data.shops.length})</h1><Button onClick={() => setOpen(!open)}><Plus className="h-4 w-4" />{t("addShop")}</Button></div>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><h1 className="text-xl font-bold">{t("manageShops")} ({query.data.shops.length})</h1><div className="flex w-full flex-wrap gap-2 sm:w-auto"><Button variant="outline" className="h-auto whitespace-normal py-2 text-left" disabled={resetBusy} onClick={() => setResetOpen(true)}><RotateCcw className="h-4 w-4 shrink-0" />{t("simulateReset")}</Button><Button onClick={() => setOpen(!open)}><Plus className="h-4 w-4" />{t("addShop")}</Button></div></div>
+        <AlertDialog open={resetOpen} onOpenChange={(value) => { if (!resetBusy) setResetOpen(value); }}>
+          <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>{t("simulateResetTitle")}</AlertDialogTitle><AlertDialogDescription>{t("simulateResetBody")}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={resetBusy}>{t("cancel")}</AlertDialogCancel><Button disabled={resetBusy} onClick={() => void simulateReset()}>{resetBusy ? "…" : t("confirmReset")}</Button></AlertDialogFooter></AlertDialogContent>
+        </AlertDialog>
         {open && <form onSubmit={submit} className="mb-6 grid gap-4 border-y border-border py-5 sm:grid-cols-2">
           <Field label={t("shopCode")}><Input name="shopNumber" required maxLength={12} pattern="[A-Za-z0-9-]+" autoComplete="off" /></Field>
           <Field label={t("shopName")}><Input name="shopName" required maxLength={100} /></Field>
