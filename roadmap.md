@@ -37,3 +37,9 @@
 
 ## Waiting on user
 - [ ] Existing shopkeeper data import (old data lives only in each shopkeeper's browser)
+
+## Whitelisted shops and monthly distribution
+- [ ] Preload three Tirunelveli shops and restrict shopkeeper access
+- [ ] District-based customer mapping to active shops
+- [ ] Atomic monthly collection ledger and cross-branch duplicate warnings
+- [ ] Verify signup, collection, cross-shop lookup and access restrictions

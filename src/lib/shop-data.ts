@@ -1,3 +1,4 @@
+import { isCollectedThisMonth } from "./ration";
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -33,7 +34,7 @@ export const customersQuery = (shopId: string) =>
           .order("id", { ascending: true })
           .range(from, from + PAGE - 1);
         if (error) throw error;
-        all.push(...data);
+        all.push(...data.map((c) => ({ ...c, status: isCollectedThisMonth(c) ? "collected" : "pending", monthly_status: isCollectedThisMonth(c) ? "Collected" : "Pending" })));
         if (data.length < PAGE) break;
       }
       return all;
@@ -72,7 +73,7 @@ export const myCardQuery = (userId: string) =>
     queryFn: async () => {
       const { data, error } = await supabase.from("customers").select("*").eq("user_id", userId).maybeSingle();
       if (error) throw error;
-      return data;
+      return data ? { ...data, status: isCollectedThisMonth(data) ? "collected" : "pending" } : null;
     },
   });
 

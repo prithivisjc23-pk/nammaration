@@ -3,6 +3,7 @@ import { useLang } from "@/hooks/use-lang";
 import { SHOP_STATUSES, type ShopStatus } from "@/lib/ration";
 import type { Customer } from "@/lib/shop-data";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const tones = {
   slate: "bg-card text-foreground ring-border",
@@ -81,19 +82,19 @@ export function CustomerRow({
           </p>
         </div>
         {pending ? (
-          <button
+          <Button
             type="button"
             onClick={() => onCollect(c)}
             className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-sm hover:bg-primary-hover"
           >
-            🌾 {t("markCollected")} <span className="font-medium opacity-90">/ வாங்கியாயிற்று</span>
-          </button>
+            🌾 {t("markCollected")}
+          </Button>
         ) : (
           <span
             className="inline-flex shrink-0 items-center justify-center gap-1 rounded-xl bg-secondary px-4 py-2.5 text-sm font-bold text-primary-strong ring-1 ring-primary-border"
             aria-label={t("collectedBadge")}
           >
-            ✅ Collected / வாங்கியாயிற்று
+            ✅ {t("collectedBadge")}
           </span>
         )}
       </div>

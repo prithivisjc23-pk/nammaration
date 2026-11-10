@@ -5,7 +5,7 @@ type Entry = string | ((...args: never[]) => string);
 const en = {
   appName: "Namma Ration", tagline: "PDS Shopkeeper Admin Console",
   login: "Login", registerShop: "Register New Shop",
-  loginId: "Username / Shop ID", password: "Password", loginBtn: "Login to Dashboard",
+  loginId: "Shop ID", password: "Password", loginBtn: "Login to Dashboard",
   shopNo: "Shop Number / ID", district: "District", selectDistrict: "Select district", taluk: "Taluk", ward: "Ward / Area", username: "Username",
   email: "Email",
   createShop: "Create Shop Account", authOnly: "Authorised ration shopkeepers only.",
@@ -43,7 +43,7 @@ const en = {
   resetBody: (n: number) => `All ${n} registered customers will be switched back to “Pending”. Smart Card, Name and Mobile details are kept intact.`,
   newMonthBanner: "A new month has started. Reset all cardholders to Pending for this month’s distribution.",
   cycle: "Distribution cycle", loading: "Loading your shop…",
-  noShop: "No shop is linked to this account.", noShopSub: "Log out and register your shop to continue.",
+  noShop: "No shop is linked to this account.", noShopSub: "Only preloaded authorised shops can access this dashboard.",
   tNoPending: "No pending cardholders — nothing to send.", tSaved: "Customer registered successfully.",
   tCollected: (n: string) => `${n} marked as collected.`, tReset: "New month started. All customers set to Pending.",
   tSent: (n: number) => `SMS sent to ${n} pending cardholders.`, tError: "Could not save. Please check your connection and try again.",
@@ -88,6 +88,7 @@ const en = {
   nTimings: "Shop timings updated", live: "Live", shopContact: "Shop contact", helpTitle: "Help & Support", helpline: "Grievance Helpline", helpTiming: "Timing", raiseComplaint: "Raise Complaint", complaintSoon: "Complaint service coming soon. Please call the helpline.", portalTitle: "Cardholder Portal",
   portalLinked: "📲 Portal", resetPortalPw: "Reset portal password", newPwFor: (n: string) => `New portal password for ${n}`,
   tPwReset: "Password updated. Tell the cardholder their new password.", savePassword: "Save password",
+  alreadyCollected: "Already Collected for this Month", lookupCard: "Check Across Shops", crossShopPending: "Pending at another shop — eligible for collection here.", lookupHint: "Enter the complete card ID or registered phone number for a cross-shop check.",
   themeToggle: "Toggle dark mode",
 } satisfies Record<string, Entry>;
 
@@ -96,7 +97,7 @@ type Dict = { [K in keyof typeof en]: (typeof en)[K] };
 const ta: Dict = {
   appName: "நம்ம ரேஷன்", tagline: "நியாய விலைக் கடை நிர்வாக பலகை",
   login: "உள்நுழை", registerShop: "புதிய கடை பதிவு",
-  loginId: "பயனர் பெயர் / கடை எண்", password: "கடவுச்சொல்", loginBtn: "டாஷ்போர்டில் நுழைக",
+  loginId: "கடை எண்", password: "கடவுச்சொல்", loginBtn: "டாஷ்போர்டில் நுழைக",
   shopNo: "கடை எண்", district: "மாவட்டம்", selectDistrict: "மாவட்டத்தைத் தேர்ந்தெடுக்கவும்", taluk: "வட்டம்", ward: "வார்டு / பகுதி", username: "பயனர் பெயர்",
   email: "மின்னஞ்சல்",
   createShop: "கடை கணக்கை உருவாக்கு", authOnly: "அங்கீகரிக்கப்பட்ட கடை உரிமையாளர்களுக்கு மட்டும்.",
@@ -134,7 +135,7 @@ const ta: Dict = {
   resetBody: (n: number) => `பதிவு செய்த ${n} வாடிக்கையாளர்களும் “நிலுவை” நிலைக்கு மாற்றப்படுவர். ஸ்மார்ட் கார்டு, பெயர், கைபேசி விவரங்கள் அப்படியே இருக்கும்.`,
   newMonthBanner: "புதிய மாதம் தொடங்கியது. இந்த மாத விநியோகத்திற்கு அனைவரையும் நிலுவைக்கு மீட்டமைக்கவும்.",
   cycle: "விநியோக சுழற்சி", loading: "உங்கள் கடை ஏற்றப்படுகிறது…",
-  noShop: "இந்தக் கணக்குடன் எந்தக் கடையும் இணைக்கப்படவில்லை.", noShopSub: "வெளியேறி உங்கள் கடையைப் பதிவு செய்யவும்.",
+  noShop: "இந்தக் கணக்குடன் எந்தக் கடையும் இணைக்கப்படவில்லை.", noShopSub: "முன்பதிவு செய்யப்பட்ட அங்கீகரிக்கப்பட்ட கடைகளுக்கு மட்டும் அனுமதி.",
   tNoPending: "நிலுவை அட்டைதாரர்கள் இல்லை — அனுப்ப எதுவும் இல்லை.", tSaved: "வாடிக்கையாளர் வெற்றிகரமாக பதிவு செய்யப்பட்டார்.",
   tCollected: (n: string) => `${n} வாங்கியதாகக் குறிக்கப்பட்டது.`, tReset: "புதிய மாதம் தொடங்கியது. அனைவரும் நிலுவைக்கு மாற்றப்பட்டனர்.",
   tSent: (n: number) => `${n} நிலுவை அட்டைதாரர்களுக்கு SMS அனுப்பப்பட்டது.`, tError: "சேமிக்க முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
@@ -179,6 +180,7 @@ const ta: Dict = {
   nTimings: "கடை நேரம் புதுப்பிக்கப்பட்டது", live: "நேரடி", shopContact: "கடை தொடர்பு", helpTitle: "உதவி & ஆதரவு", helpline: "குறைதீர் உதவி எண்", helpTiming: "நேரம்", raiseComplaint: "புகார் அளிக்க", complaintSoon: "புகார் சேவை விரைவில் வரும். உதவி எண்ணை அழைக்கவும்.", portalTitle: "அட்டைதாரர் பக்கம்",
   portalLinked: "📲 கணக்கு", resetPortalPw: "கடவுச்சொல்லை மீட்டமை", newPwFor: (n: string) => `${n} க்கான புதிய கடவுச்சொல்`,
   tPwReset: "கடவுச்சொல் மாற்றப்பட்டது. அட்டைதாரரிடம் புதிய கடவுச்சொல்லைத் தெரிவிக்கவும்.", savePassword: "கடவுச்சொல்லைச் சேமி",
+  alreadyCollected: "இந்த மாதம் ஏற்கனவே வாங்கியாயிற்று", lookupCard: "அனைத்து கடைகளிலும் சரிபார்", crossShopPending: "வேறு கடையில் பதிவு உள்ளது — இங்கு வாங்கத் தகுதியுள்ளது.", lookupHint: "முழு அட்டை எண் அல்லது பதிவு செய்த கைபேசி எண்ணை உள்ளிடவும்.",
   themeToggle: "இருள் / ஒளி முறை",
 };
 

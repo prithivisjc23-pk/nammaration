@@ -22,6 +22,13 @@
       "when": 1793199275461,
       "tag": "0002_customers_protect_user_id_role_check",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794290500809,
+      "tag": "0003_whitelist_monthly_ration",
+      "breakpoints": true
     }
   ]
 }

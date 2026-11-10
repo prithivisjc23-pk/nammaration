@@ -19,9 +19,28 @@ import {
   DISTRICT_CODES,
   compareShopIds,
   nextShopId,
+  isWhitelistedShop,
+  isCollectedThisMonth,
+  monthKey,
 } from "./ration";
 
 const c = (name: string, card: string, mobile: string, status = "pending") => ({ name, card, mobile, status });
+
+describe("whitelist and monthly eligibility", () => {
+  it("allows only the three approved shop IDs", () => {
+    expect(["TNV-FPS-001", "TNV-FPS-002", "TNV-FPS-003"].every(isWhitelistedShop)).toBe(true);
+    expect(isWhitelistedShop("TIRU-1")).toBe(false);
+    expect(isWhitelistedShop("TNV-FPS-004")).toBe(false);
+  });
+  it("blocks this month's collection but permits the following month", () => {
+    const card = { status: "collected", monthly_status: "Collected", distribution_month: "2026-11" };
+    expect(isCollectedThisMonth(card, new Date("2026-11-10T06:00:00Z"))).toBe(true);
+    expect(isCollectedThisMonth(card, new Date("2026-12-01T06:00:00Z"))).toBe(false);
+  });
+  it("uses India's calendar month at the UTC month boundary", () => {
+    expect(monthKey(new Date("2026-11-30T19:00:00Z"))).toBe("2026-12");
+  });
+});
 
 describe("SMS lock rules", () => {
   it("allows the morning alert only while the shop is open", () => {
