@@ -29,8 +29,8 @@ export const simulateNextMonthReset = createServerFn({ method: "POST" })
     if (error || !allowed) return { ok: false, error: "forbidden" };
     // The caller-scoped RPC rechecks the role and atomically audits the new quota cycle.
     const { data: result, error: resetError } = await context.supabase.rpc("simulate_next_month_reset");
-    if (resetError || !result || typeof result !== "object" || Array.isArray(result) || result.ok !== true) return { ok: false, error: "failed" };
-    return { ok: true, count: typeof result.count === "number" ? result.count : 0 };
+    if (resetError || !result || typeof result !== "object" || Array.isArray(result) || result['ok'] !== true) return { ok: false, error: "failed" };
+    return { ok: true, count: typeof result['count'] === "number" ? result['count'] : 0 };
   });
 
 export const createManagedShop = createServerFn({ method: "POST" })
