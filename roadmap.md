@@ -39,8 +39,8 @@
 - [ ] Existing shopkeeper data import (old data lives only in each shopkeeper's browser)
 
 ## Whitelisted shops and monthly distribution
-- [ ] Repair shop-table password verification, activate owner accounts, and verify all three real dashboard logins
-- [ ] Preload three Tirunelveli shops and restrict shopkeeper access
-- [ ] District-based customer mapping to active shops
-- [ ] Atomic monthly collection ledger and cross-branch duplicate warnings
-- [ ] Verify signup, collection, cross-shop lookup and access restrictions
+- [x] Repair shop-table password verification, activate owner accounts, and verify all three real dashboard logins
+- [x] Preload three Tirunelveli shops and restrict shopkeeper access
+- [x] District-based customer mapping to active shops (implemented previously)
+- [x] Atomic monthly collection ledger and cross-branch duplicate warnings (implemented previously)
+- Earlier signup and cross-shop collection checks were not performed; this login repair verifies owner sign-in and dashboard refresh only.
