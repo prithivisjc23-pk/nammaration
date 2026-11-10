@@ -46,6 +46,7 @@ export type Database = {
           monthly_quota: Json
           monthly_status: string
           name: string
+          quota_generation: number
           shop_id: string
           status: string
           user_id: string | null
@@ -63,6 +64,7 @@ export type Database = {
           monthly_quota?: Json
           monthly_status?: string
           name: string
+          quota_generation?: number
           shop_id: string
           status?: string
           user_id?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           monthly_quota?: Json
           monthly_status?: string
           name?: string
+          quota_generation?: number
           shop_id?: string
           status?: string
           user_id?: string | null
@@ -94,6 +97,27 @@ export type Database = {
           },
         ]
       }
+      quota_reset_events: {
+        Row: {
+          actor_id: string
+          calendar_month: string
+          created_at: string
+          id: number
+        }
+        Insert: {
+          actor_id: string
+          calendar_month: string
+          created_at?: string
+          id?: never
+        }
+        Update: {
+          actor_id?: string
+          calendar_month?: string
+          created_at?: string
+          id?: never
+        }
+        Relationships: []
+      }
       ration_collections: {
         Row: {
           card_norm: string
@@ -102,6 +126,7 @@ export type Database = {
           distribution_month: string
           id: string
           mobile: string
+          quota_generation: number
           shop_id: string
         }
         Insert: {
@@ -111,6 +136,7 @@ export type Database = {
           distribution_month: string
           id?: string
           mobile: string
+          quota_generation?: number
           shop_id: string
         }
         Update: {
@@ -120,6 +146,7 @@ export type Database = {
           distribution_month?: string
           id?: string
           mobile?: string
+          quota_generation?: number
           shop_id?: string
         }
         Relationships: [
@@ -297,6 +324,7 @@ export type Database = {
         Args: { _customer_id: string; _shop_id: string }
         Returns: Json
       }
+      current_quota_generation: { Args: never; Returns: number }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_shop_customer: { Args: { _shop_id: string }; Returns: boolean }
       list_shops_public: {
@@ -322,10 +350,12 @@ export type Database = {
         }
         Returns: string
       }
+      renew_monthly_quotas: { Args: never; Returns: number }
       set_admin_credential: {
         Args: { _login_id: string; _password: string; _user_id: string }
         Returns: undefined
       }
+      simulate_next_month_reset: { Args: never; Returns: Json }
       verify_shop_credentials: {
         Args: { _password: string; _shop_number: string }
         Returns: string

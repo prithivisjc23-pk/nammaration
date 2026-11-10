@@ -43,6 +43,13 @@
       "when": 1794297937906,
       "tag": "0005_dynamic_onorc_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794300214332,
+      "tag": "0006_audited_monthly_quota_renewal",
+      "breakpoints": true
     }
   ]
 }
