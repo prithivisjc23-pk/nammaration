@@ -32,8 +32,9 @@ export function ManageShops() {
       const result = await reset();
       if (!result.ok) { toast.error(t(result.error === "forbidden" ? "adminDenied" : "eGeneric")); return; }
       setResetOpen(false);
-      await qc.invalidateQueries();
       toast.success(t("simulateResetDone", result.count ?? 0));
+      // Refresh failures must not turn a committed reset into an error notification.
+      void qc.invalidateQueries();
     } catch { toast.error(t("eGeneric")); } finally { setResetBusy(false); }
   }
   async function logout() { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); await navigate({ to: "/auth" }); }

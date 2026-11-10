@@ -1,5 +1,9 @@
 # Namma Ration roadmap
 
+## Reset confirmation repair
+- [ ] Diagnose and repair the authenticated global reset failure
+- [ ] Verify Yes, Reset succeeds, globally renews eligibility, and preserves history and admin restrictions
+
 ## Monthly renewal and public login cleanup
 - [x] Remove public Super Admin labels while preserving shared login
 - [x] Automatic India-calendar monthly renewal with preserved collection history
