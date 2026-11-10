@@ -40,8 +40,8 @@ END $$;
 -- Match the authenticated API session, including its safe-update protection.
 SELECT set_config('test.expected_reset_count', (SELECT count(*)::text FROM public.customers), true);
 SELECT set_config('request.jwt.claim.sub', (SELECT user_id::text FROM public.user_roles WHERE role='super_admin' LIMIT 1), true);
-SET LOCAL ROLE authenticated;
 LOAD 'safeupdate';
+SET LOCAL ROLE authenticated;
 DO $$
 DECLARE result jsonb;
 BEGIN
