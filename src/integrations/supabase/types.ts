@@ -20,9 +20,11 @@ export type Database = {
           card_norm: string
           collected_at: string | null
           created_at: string
+          distribution_month: string
           district: string | null
           id: string
           mobile: string
+          monthly_status: string
           name: string
           shop_id: string
           status: string
@@ -33,9 +35,11 @@ export type Database = {
           card_norm: string
           collected_at?: string | null
           created_at?: string
+          distribution_month?: string
           district?: string | null
           id?: string
           mobile: string
+          monthly_status?: string
           name: string
           shop_id: string
           status?: string
@@ -46,9 +50,11 @@ export type Database = {
           card_norm?: string
           collected_at?: string | null
           created_at?: string
+          distribution_month?: string
           district?: string | null
           id?: string
           mobile?: string
+          monthly_status?: string
           name?: string
           shop_id?: string
           status?: string
@@ -57,6 +63,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "customers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ration_collections: {
+        Row: {
+          card_norm: string
+          collected_at: string
+          customer_id: string
+          distribution_month: string
+          id: string
+          mobile: string
+          shop_id: string
+        }
+        Insert: {
+          card_norm: string
+          collected_at?: string
+          customer_id: string
+          distribution_month: string
+          id?: string
+          mobile: string
+          shop_id: string
+        }
+        Update: {
+          card_norm?: string
+          collected_at?: string
+          customer_id?: string
+          distribution_month?: string
+          id?: string
+          mobile?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ration_collections_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -73,6 +117,7 @@ export type Database = {
           evening_close: string
           evening_open: string
           id: string
+          is_active: boolean
           is_open: boolean
           mobile: string
           morning_close: string
@@ -95,6 +140,7 @@ export type Database = {
           evening_close?: string
           evening_open?: string
           id?: string
+          is_active?: boolean
           is_open?: boolean
           mobile?: string
           morning_close?: string
@@ -117,6 +163,7 @@ export type Database = {
           evening_close?: string
           evening_open?: string
           id?: string
+          is_active?: boolean
           is_open?: boolean
           mobile?: string
           morning_close?: string
@@ -180,6 +227,10 @@ export type Database = {
         Args: { _shop_number: string; _username: string }
         Returns: Json
       }
+      collect_monthly_ration: {
+        Args: { _customer_id: string; _shop_id: string }
+        Returns: Json
+      }
       is_shop_customer: { Args: { _shop_id: string }; Returns: boolean }
       list_shops_public: {
         Args: never
@@ -189,6 +240,7 @@ export type Database = {
           shop_number: string
         }[]
       }
+      lookup_ration_card: { Args: { _identifier: string }; Returns: Json }
       owns_shop: { Args: { _shop_id: string }; Returns: boolean }
     }
     Enums: {
